@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#0C0B10" />
+  <title>SILA</title>
+  <link rel="manifest" href="/play/manifest.webmanifest" />
+  <link rel="icon" href="/play/icon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/play/play.css" />
+</head>
+<body data-phase="LOBBY">
+  <div id="bg" aria-hidden="true"></div>
+
+  <!-- ======================= JOIN ======================= -->
+  <main id="join" class="screen">
+    <header class="brand">
+      <div class="mark" aria-hidden="true"></div>
+      <h1>SILA</h1>
+      <p class="tag">Tonight, strangers. Later, a group chat.</p>
+    </header>
+
+    <form id="join-form" autocomplete="off">
+      <label class="field">
+        <span>Room code</span>
+        <input id="room-input" inputmode="text" autocapitalize="none" spellcheck="false" placeholder="room_a1b2c3" required />
+      </label>
+      <label class="field">
+        <span>What should the table call you?</span>
+        <input id="display-input" maxlength="24" placeholder="First name is perfect" required />
+      </label>
+
+      <details class="vault">
+        <summary>Two facts, on your terms <em>(optional)</em></summary>
+        <p class="consent">These enter the game <strong>only</strong> if you write them. Rawi may read one aloud for others to guess. Nothing else about you is used, stored beyond tonight, or shown without this consent.</p>
+        <label class="field"><span>A comfort food and where it's from</span>
+          <input id="vault-1" maxlength="140" placeholder="e.g. vada pav from one exact stall in Dadar" /></label>
+        <label class="field"><span>A tiny story or hidden skill</span>
+          <input id="vault-2" maxlength="140" placeholder="e.g. once got lost in Deira for 3 hours, loved it" /></label>
+        <label class="field"><span>Three words that feel like you</span>
+          <input id="tags-input" maxlength="80" placeholder="e.g. karak, cricket, metro maps" /></label>
+      </details>
+
+      <button id="join-btn" type="submit">Take a seat</button>
+      <p id="join-error" class="err" role="alert"></p>
+    </form>
+  </main>
+
+  <!-- ======================= ROOM ======================= -->
+  <main id="room" class="screen" hidden>
+    <header id="topbar">
+      <div id="phase-chip"><span id="phase-name">Lobby</span><span id="conn-dot" title="connection"></span></div>
+      <div id="scores"></div>
+      <button id="more-btn" aria-label="more">⋯</button>
+    </header>
+
+    <!-- Rawi -->
+    <section id="stage" aria-live="polite">
+      <div id="caption"><span id="caption-text">Rawi is warming up…</span></div>
+    </section>
+
+    <!-- Prompt card -->
+    <section id="prompt-card" hidden>
+      <div id="timer-ring"><svg viewBox="0 0 36 36"><circle class="track" cx="18" cy="18" r="16"/><circle id="timer-arc" cx="18" cy="18" r="16"/></svg><span id="timer-label"></span></div>
+      <h2 id="prompt-title"></h2>
+      <p id="prompt-text"></p>
+      <div id="cue-box" hidden><span class="cue-eyebrow">your secret</span><strong id="cue-text"></strong><span class="cue-hint">eyes up — this stays on your phone</span></div>
+      <div id="choices" hidden></div>
+      <form id="submit-form" hidden><input id="submit-input" maxlength="120" placeholder="Type it — only Rawi sees this" /><button type="submit">Send</button></form>
+      <form id="answer-form" hidden><p class="answer-lead">You've got the floor — say it out loud, type it here.</p><input id="answer-input" maxlength="120" /><button type="submit">Lock answer</button></form>
+      <div id="tally" hidden></div>
+    </section>
+
+    <!-- The buzzer -->
+    <section id="buzzer-zone" hidden>
+      <button id="buzzer" aria-label="buzz"><span id="buzzer-label">BUZZ</span></button>
+    </section>
+
+    <!-- Table -->
+    <section id="table">
+      <h3 class="section-label">the table</h3>
+      <div id="members"></div>
+    </section>
+
+    <footer id="react-bar">
+      <button class="react" data-emoji="😂">😂</button>
+      <button class="react" data-emoji="❤️">❤️</button>
+      <button class="react" data-emoji="🔥">🔥</button>
+      <button class="react" data-emoji="👏">👏</button>
+    </footer>
+
+    <!-- Send-off -->
+    <section id="sendoff" hidden>
+      <p class="so-eyebrow">tonight you became</p>
+      <h2 id="so-name"></h2>
+      <p id="so-slot"></p>
+      <ul id="so-moments"></ul>
+      <p class="so-foot">Rawi kept the seats warm. Go be friends.</p>
+    </section>
+
+    <!-- Overlays -->
+    <div id="overlay" hidden>
+      <div id="overlay-card"><span id="overlay-icon"></span><h2 id="overlay-title"></h2><p id="overlay-text"></p></div>
+    </div>
+
+    <!-- More sheet -->
+    <div id="sheet" hidden>
+      <div id="sheet-card">
+        <button id="leave-btn" class="sheet-item">Step away quietly<small>No announcement after the first. Your score pauses.</small></button>
+        <button id="safety-btn" class="sheet-item hold">I need this to stop<small>Press and hold. A human is notified — the room never knows it was you.</small></button>
+        <button id="sheet-close" class="sheet-item dim">Back to the game</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="/play/play.js"></script>
+</body>
+</html>

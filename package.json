@@ -1,0 +1,25 @@
+{
+  "name": "sila-m0",
+  "private": true,
+  "version": "0.1.0",
+  "description": "SILA M0 \u2014 The Invisible Host. Wizard-of-Oz room engine, player PWA, and Operator Console.",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server/index.js",
+    "dev": "tsc && node dist/server/index.js",
+    "sim": "tsc && node dist/scripts/sim.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "AGPL-3.0",
+  "dependencies": {
+    "ws": "^8.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.0",
+    "@types/ws": "^8.18.1",
+    "typescript": "^6.0.3"
+  },
+  "type": "module"
+}

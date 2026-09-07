@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#101014" />
+  <title>SILA · Operator Console</title>
+  <link rel="icon" href="/play/icon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/ops/ops.css" />
+</head>
+<body>
+
+<!-- =================== LANDING =================== -->
+<main id="landing">
+  <h1>SILA <span>Operator</span></h1>
+  <div class="panel">
+    <label>Ops key <input id="key-input" autocomplete="off" spellcheck="false" placeholder="printed at server boot" /></label>
+    <div class="row">
+      <button id="create-room">+ New room</button>
+      <button id="refresh-rooms" class="ghost">Refresh</button>
+    </div>
+    <div id="room-list"></div>
+    <p id="landing-err" class="err"></p>
+  </div>
+</main>
+
+<!-- =================== CONSOLE =================== -->
+<main id="console" hidden>
+  <!-- top strip: identity + clock + phase gates -->
+  <header id="strip">
+    <div id="room-id" class="mono"></div>
+    <div id="clock">
+      <div class="clockline"><span class="lbl">session</span><span id="t-elapsed" class="mono big">00:00</span><span id="t-hardstop" class="mono dim"></span></div>
+      <div class="clockline"><span class="lbl" id="phase-lbl">phase</span>
+        <div id="budget-bar"><div id="budget-min"></div><div id="budget-target"></div><div id="budget-fill"></div></div>
+        <span id="phase-elapsed" class="mono"></span>
+      </div>
+    </div>
+    <div id="phase-gates"></div>
+    <div id="flags">
+      <button id="hold-btn" class="flagbtn">HOLD</button>
+      <button id="pause-btn" class="flagbtn">PAUSE</button>
+    </div>
+  </header>
+
+  <!-- beat rail -->
+  <div id="beat-rail"></div>
+
+  <div id="grid">
+    <!-- ============ LEFT: game control ============ -->
+    <section class="col">
+      <div class="panel" id="deck-panel">
+        <h2>Prompt deck</h2>
+        <div class="row">
+          <select id="pack-select"></select>
+          <label class="chk"><input type="checkbox" id="phase-filter" checked /> this phase only</label>
+        </div>
+        <div id="prompt-list"></div>
+        <div class="row" id="round-actions">
+          <button id="lock-now" class="ghost">Lock window now</button>
+          <button id="scrap-btn" class="ghost warn">Scrap round</button>
+        </div>
+        <div id="adjudicate-box" class="subpanel" hidden>
+          <div class="row">
+            <select id="winner-select"></select>
+            <button id="adj-correct" class="good">✓ Correct (+10)</button>
+            <button id="adj-wrong" class="warn">✗ Wrong</button>
+          </div>
+        </div>
+        <div id="submissions-box" class="subpanel" hidden>
+          <div class="row spread"><h3>Submissions <span id="sub-count" class="dim"></span></h3>
+            <label class="chk"><input type="checkbox" id="attr-toggle" /> show who</label></div>
+          <ul id="sub-list" class="mono"></ul>
+          <p class="hint">Read these through Rawi (unattributed), then ✓ to move on.</p>
+        </div>
+      </div>
+
+      <div class="panel" id="loop-panel">
+        <h2>E · The Loop</h2>
+        <div class="row"><input id="slot-1" placeholder="Thu 21:00" /><input id="slot-2" placeholder="Fri 19:30" /><input id="slot-3" placeholder="Sun 20:00" /></div>
+        <div class="row">
+          <button id="poll-open">Open one-tap poll</button>
+          <button id="poll-close" class="ghost">Close poll</button>
+        </div>
+        <div class="row">
+          <select id="christen-select"><option value="">— name suggestions —</option></select>
+          <input id="christen-input" placeholder="or type the winning name" />
+          <button id="christen-btn">Christen</button>
+        </div>
+        <div class="row">
+          <button id="cancel-btn" class="ghost warn">Cancel graceful (lobby)</button>
+          <button id="close-btn" class="warn">Close room</button>
+          <button id="outcome-btn" class="ghost">Outcome</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ MIDDLE: Rawi ============ -->
+    <section class="col">
+      <div class="panel" id="voice-panel">
+        <h2>Rawi · line deck</h2>
+        <select id="line-select"></select>
+        <div id="slot-inputs"></div>
+        <div id="line-preview" class="preview"></div>
+        <div class="row">
+          <button id="fire-line">🔊 Fire line</button>
+        </div>
+        <textarea id="custom-line" rows="2" placeholder="…or speak off-script (typed here, Rawi's voice out there)"></textarea>
+        <div class="row"><button id="fire-custom" class="ghost">Fire custom</button></div>
+      </div>
+
+      <div class="panel" id="moments-panel">
+        <h2>Moments <span class="dim">(callback ammo)</span></h2>
+        <div class="row">
+          <input id="moment-hint" placeholder='phrase hint — "whose grandmother is scarier"' />
+          <button id="moment-tag">Tag</button>
+        </div>
+        <ul id="moments-list"></ul>
+      </div>
+
+      <div class="panel" id="directive-panel">
+        <h2>Directive <span class="dim">(you are the ICA)</span></h2>
+        <div class="row">
+          <select id="dir-kind">
+            <option>ENGINEERED_WIN</option><option>COVER_MECHANIC</option><option>PAIR_SHIELD</option>
+            <option>STRUCTURAL_ROTATE</option><option>ROLE_PROMOTE</option><option>CHAMPION_RULE</option>
+          </select>
+          <select id="dir-target"><option value="">room-wide</option></select>
+        </div>
+        <div class="row">
+          <input id="dir-note" placeholder="note (why)" />
+          <button id="dir-set">Set</button>
+          <button id="dir-clear" class="ghost">Clear</button>
+        </div>
+        <p id="dir-active" class="hint"></p>
+      </div>
+    </section>
+
+    <!-- ============ RIGHT: the room ============ -->
+    <section class="col">
+      <div class="panel" id="roster-panel">
+        <h2>Roster · live T0</h2>
+        <div id="roster"></div>
+        <div class="row spread dim mono" id="room-metrics"></div>
+      </div>
+
+      <div class="panel" id="warn-panel">
+        <h2>Advisories <span class="dim">(Pacer + ICA, human-executed)</span></h2>
+        <ul id="warnings" class="mono"></ul>
+      </div>
+
+      <div class="panel" id="log-panel">
+        <h2>Event log <span class="dim">tail</span></h2>
+        <ul id="event-log" class="mono"></ul>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div id="outcome-modal" hidden><div class="panel" id="outcome-card"><h2>Room outcome</h2><pre id="outcome-json" class="mono"></pre><button id="outcome-close" class="ghost">Close</button></div></div>
+
+<script src="/ops/ops.js"></script>
+</body>
+</html>

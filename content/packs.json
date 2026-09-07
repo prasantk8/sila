@@ -1,0 +1,357 @@
+[
+  {
+    "pack_id": "pk_a_handshake_01",
+    "title": "A · The Handshake",
+    "phase": "A",
+    "mechanic": "ALL_SUBMIT",
+    "culture_tags": ["universal"],
+    "timer_s_default": 60,
+    "prompts": [
+      {
+        "prompt_id": "pr_a_word_week",
+        "body": { "title": "One word", "text": "One word for your week. Just one. Type it — nobody sees who wrote what." },
+        "difficulty": "LOW"
+      },
+      {
+        "prompt_id": "pr_a_comfort_drink",
+        "body": { "title": "Right now", "text": "The drink you actually want in your hand right now. Type it." },
+        "difficulty": "LOW"
+      },
+      {
+        "prompt_id": "pr_a_teleport",
+        "body": { "title": "Teleport", "text": "If this table teleported anywhere for the next hour — type the place." },
+        "difficulty": "LOW"
+      }
+    ]
+  },
+  {
+    "pack_id": "pk_a_warmup_tap",
+    "title": "A · Warm-up Taps",
+    "phase": "A",
+    "mechanic": "ALL_TAP",
+    "culture_tags": ["dubai", "universal"],
+    "timer_s_default": 25,
+    "prompts": [
+      {
+        "prompt_id": "pr_a_ac_wars",
+        "body": { "title": "AC wars", "text": "The office AC. Be honest.", "choices": ["Arctic. I bring a jacket.", "Perfect, don't touch it", "Still too warm somehow"] },
+        "difficulty": "LOW"
+      },
+      {
+        "prompt_id": "pr_a_arrival",
+        "body": { "title": "Tonight", "text": "How did you get here tonight?", "choices": ["Drove", "Metro", "Careem/taxi", "Walked, somehow"] },
+        "difficulty": "LOW"
+      },
+      {
+        "prompt_id": "pr_a_weekend_mode",
+        "body": { "title": "Weekend mode", "text": "Your default Saturday:", "choices": ["Beach", "Mall", "Brunch", "Blanket + series"] },
+        "difficulty": "LOW"
+      }
+    ]
+  },
+  {
+    "pack_id": "pk_b_food_uae_01",
+    "title": "B · Food Court (world-facing)",
+    "phase": "B",
+    "mechanic": "OPEN_BUZZ",
+    "culture_tags": ["dubai", "food", "south-asia", "levant"],
+    "timer_s_default": 45,
+    "prompts": [
+      {
+        "prompt_id": "pr_b_karak_price",
+        "body": { "title": "Karak economics", "text": "A proper roadside karak in Dubai still costs about this many dirhams. Buzz and say the number." },
+        "answer_key": { "accept": ["1", "one", "1.5", "2", "two", "one dirham", "two dirham"] },
+        "difficulty": "LOW"
+      },
+      {
+        "prompt_id": "pr_b_shawarma_origin",
+        "body": { "title": "Shawarma passport", "text": "Shawarma's cooking style — meat on a vertical rotating spit — traces back to which country's döner tradition? Buzz it." },
+        "answer_key": { "accept": ["turkey", "turkiye", "türkiye", "ottoman"] },
+        "difficulty": "MED"
+      },
+      {
+        "prompt_id": "pr_b_mango_king",
+        "body": { "title": "King of mangoes", "text": "Every summer, Dubai supermarkets go to war over this Pakistani-and-Indian mango often called the king. Buzz the variety." },
+        "answer_key": { "accept": ["alphonso", "chaunsa", "sindhri", "kesar"] },
+        "difficulty": "MED"
+      },
+      {
+        "prompt_id": "pr_b_machboos",
+        "body": { "title": "National plate", "text": "Spiced rice, slow-cooked meat, dried lime — the Emirati dish every majlis serves. Buzz the name." },
+        "answer_key": { "accept": ["machboos", "majboos", "kabsa", "machbous"] },
+        "difficulty": "MED"
+      },
+      {
+        "prompt_id": "pr_b_luqaimat",
+        "body": { "title": "Golden spheres", "text": "Crispy Emirati dumplings drowned in date syrup, the undisputed champion of every Ramadan tent dessert table. Buzz it." },
+        "answer_key": { "accept": ["luqaimat", "lugaimat", "loqemat", "luqemat"] },
+        "difficulty": "LOW"
+      }
+    ]
+  },
+  {
+    "pack_id": "pk_b_city_uae_01",
+    "title": "B · This City (world-facing)",
+    "phase": "B",
+    "mechanic": "OPEN_BUZZ",
+    "culture_tags": ["dubai", "uae"],
+    "timer_s_default": 45,
+    "prompts": [
+      {
+        "prompt_id": "pr_b_metro_line",
+        "body": { "title": "Two colours", "text": "Dubai Metro runs two main lines. Name either colour — first buzz takes it." },
+        "answer_key": { "accept": ["red", "green"] },
+        "difficulty": "LOW"
+      },
+      {
+        "prompt_id": "pr_b_salik",
+        "body": { "title": "The beep", "text": "The thing that beeps 4 dirhams off your card every time you cross the bridge. Buzz the name." },
+        "answer_key": { "accept": ["salik"] },
+        "difficulty": "LOW"
+      },
+      {
+        "prompt_id": "pr_b_burj_floors",
+        "body": { "title": "How tall really", "text": "Burj Khalifa has roughly how many floors? Within ten wins it. Buzz and say your number." },
+        "answer_key": { "accept": ["163", "160", "155", "156", "157", "158", "159", "161", "162", "164", "165", "166", "167", "168", "169", "170", "154", "153"] },
+        "difficulty": "MED"
+      },
+      {
+        "prompt_id": "pr_b_creek_boat",
+        "body": { "title": "One dirham voyage", "text": "The wooden boat that still crosses Dubai Creek for a single dirham. Buzz its name." },
+        "answer_key": { "accept": ["abra"] },
+        "difficulty": "LOW"
+      },
+      {
+        "prompt_id": "pr_b_old_souk",
+        "body": { "title": "Glitter district", "text": "The Deira souk where windows drip with more of one metal than most central banks hold. Buzz what they sell." },
+        "answer_key": { "accept": ["gold"] },
+        "difficulty": "LOW"
+      }
+    ]
+  },
+  {
+    "pack_id": "pk_b_blitz_01",
+    "title": "B · Binary Blitz (zero-stakes taps)",
+    "phase": "B",
+    "mechanic": "ALL_TAP",
+    "culture_tags": ["dubai", "universal"],
+    "timer_s_default": 20,
+    "prompts": [
+      {
+        "prompt_id": "pr_b_karak_capp",
+        "body": { "title": "Blitz", "text": "Pick one. No thinking.", "choices": ["Karak", "Cappuccino"] },
+        "difficulty": "LOW"
+      },
+      {
+        "prompt_id": "pr_b_old_new",
+        "body": { "title": "Blitz", "text": "Your Dubai:", "choices": ["Old Dubai — creek & souks", "New Dubai — marina & glass"] },
+        "difficulty": "LOW"
+      },
+      {
+        "prompt_id": "pr_b_summer",
+        "body": { "title": "Blitz", "text": "Dubai summer strategy:", "choices": ["Embrace the sauna", "Mall migration", "Flee the country"] },
+        "difficulty": "LOW"
+      },
+      {
+        "prompt_id": "pr_b_biryani",
+        "body": { "title": "Blitz", "text": "Biryani:", "choices": ["Hyderabadi", "Lucknowi", "Karachi-style", "Any, immediately"] },
+        "difficulty": "LOW"
+      },
+      {
+        "prompt_id": "pr_b_friday",
+        "body": { "title": "Blitz", "text": "Ideal Friday morning:", "choices": ["Sleep till noon", "Beach at 7am", "Big breakfast mission"] },
+        "difficulty": "LOW"
+      }
+    ]
+  },
+  {
+    "pack_id": "pk_c_whose_01",
+    "title": "C · Whose Is This (vault scaffolds)",
+    "phase": "C",
+    "mechanic": "WHOSE_IS_THIS",
+    "culture_tags": ["room"],
+    "timer_s_default": 40,
+    "prompts": [
+      {
+        "prompt_id": "pr_c_whose_1",
+        "body": { "title": "Whose is this?", "text": "Rawi is about to read a true fact about someone at this table. Buzz the moment you know whose it is." },
+        "difficulty": "LOW"
+      },
+      {
+        "prompt_id": "pr_c_whose_2",
+        "body": { "title": "Whose is this?", "text": "Another one. Listen close — buzz when you know whose story this is." },
+        "difficulty": "MED"
+      },
+      {
+        "prompt_id": "pr_c_whose_3",
+        "body": { "title": "Whose is this?", "text": "Last of this set. Rawi reads, you buzz, the owner stays poker-faced." },
+        "difficulty": "MED"
+      }
+    ]
+  },
+  {
+    "pack_id": "pk_c_twotruths_01",
+    "title": "C · Two Truths & the Table",
+    "phase": "C",
+    "mechanic": "TWO_TRUTHS_TABLE",
+    "culture_tags": ["room"],
+    "timer_s_default": 60,
+    "prompts": [
+      {
+        "prompt_id": "pr_c_tt_1",
+        "body": { "title": "Two truths, one lie", "text": "The player in the spotlight says three things out loud — two true, one lie. Everyone else: buzz to call the lie." },
+        "difficulty": "MED"
+      },
+      {
+        "prompt_id": "pr_c_tt_2",
+        "body": { "title": "Two truths, round two", "text": "New storyteller, same rules. Two truths, one lie. Buzz to accuse." },
+        "difficulty": "MED"
+      }
+    ]
+  },
+  {
+    "pack_id": "pk_c_origin_01",
+    "title": "C · Guess the Origin (culture recognition)",
+    "phase": "C",
+    "mechanic": "GUESS_ORIGIN",
+    "culture_tags": ["world", "food", "language"],
+    "timer_s_default": 40,
+    "prompts": [
+      {
+        "prompt_id": "pr_c_or_karak",
+        "body": { "title": "Origin story", "text": "Karak chai conquered the Gulf — but the word 'karak' and the brewing style came with workers from which region? Buzz it." },
+        "answer_key": { "accept": ["india", "south asia", "subcontinent", "pakistan", "indian subcontinent"] },
+        "difficulty": "MED"
+      },
+      {
+        "prompt_id": "pr_c_or_yalla",
+        "body": { "title": "Origin story", "text": "'Yalla', 'habibi', 'khalas' — the language Dubai borrows its everyday glue from. Buzz it." },
+        "answer_key": { "accept": ["arabic"] },
+        "difficulty": "LOW"
+      },
+      {
+        "prompt_id": "pr_c_or_adobo",
+        "body": { "title": "Origin story", "text": "Adobo, pancit, halo-halo — comfort food of one of Dubai's biggest communities. Buzz the country." },
+        "answer_key": { "accept": ["philippines", "the philippines", "filipino"] },
+        "difficulty": "LOW"
+      },
+      {
+        "prompt_id": "pr_c_or_tteok",
+        "body": { "title": "Origin story", "text": "Tteokbokki — chewy rice cakes in gochujang, sold at street stalls behind schools. Buzz the country." },
+        "answer_key": { "accept": ["korea", "south korea", "korean"] },
+        "difficulty": "LOW"
+      }
+    ]
+  },
+  {
+    "pack_id": "pk_d_pitchoff_01",
+    "title": "D · Pitch-Off (absurd products)",
+    "phase": "D",
+    "mechanic": "PITCH_OFF",
+    "culture_tags": ["improv", "dubai"],
+    "timer_s_default": 120,
+    "prompts": [
+      {
+        "prompt_id": "pr_d_pitch_1",
+        "body": {
+          "title": "Pitch-Off",
+          "text": "Pairs. Your phone shows your product. 30 seconds to pitch it to the table like your Series A depends on it. Table votes by pointing.",
+          "cues": [
+            "Salik for queues — pay 4 AED to skip any line in Dubai",
+            "Karak subscription drone — hot chai to your window at 5pm sharp",
+            "AC jacket — personal climate control for mall-to-car journeys",
+            "Habibi Translate — earbuds that convert what you said into what you meant",
+            "Valet for beaches — a man parks your towel at the perfect spot",
+            "Iftar alarm — an app that physically stops you from snacking at 6:57pm"
+          ]
+        },
+        "difficulty": "LOW"
+      },
+      {
+        "prompt_id": "pr_d_pitch_2",
+        "body": {
+          "title": "Pitch-Off · round two",
+          "text": "Swap partners. New product on your phone. Same rules: 30 seconds, full conviction, table votes.",
+          "cues": [
+            "Grandma-as-a-Service — video call a stern grandmother to guilt you into anything",
+            "Metro seat futures — trade guaranteed rush-hour seats like stocks",
+            "Shisha smoke ring NFT camera — mint your best ring before it fades",
+            "Desert GPS for feelings — tells you exactly how lost you are, emotionally",
+            "Reverse Careem — a driver arrives and convinces you to cancel your plans",
+            "Brunch insurance — full refund if the eggs benedict disappoints"
+          ]
+        },
+        "difficulty": "MED"
+      }
+    ]
+  },
+  {
+    "pack_id": "pk_d_storychain_01",
+    "title": "D · Story Chain (one cue each)",
+    "phase": "D",
+    "mechanic": "STORY_CHAIN",
+    "culture_tags": ["improv"],
+    "timer_s_default": 180,
+    "prompts": [
+      {
+        "prompt_id": "pr_d_chain_1",
+        "body": {
+          "title": "Story Chain",
+          "text": "One story, built one sentence at a time around the table. Your phone shows ONE secret word — you must smuggle it into your sentence. Rawi starts: 'It was 47 degrees the day everything changed at the Global Village...'",
+          "cues": ["camel", "wifi password", "gold bar", "auntie", "helicopter", "biryani"]
+        },
+        "difficulty": "LOW"
+      },
+      {
+        "prompt_id": "pr_d_chain_2",
+        "body": {
+          "title": "Story Chain · the sequel",
+          "text": "Same table, new saga, new secret words. Rawi starts: 'The last metro of the night pulled in, and only one seat was empty...'",
+          "cues": ["falcon", "landlord", "sunscreen", "cousin's wedding", "blue tick", "karak"]
+        },
+        "difficulty": "MED"
+      }
+    ]
+  },
+  {
+    "pack_id": "pk_d_soundonly_01",
+    "title": "D · Sound Only (phones face-down)",
+    "phase": "D",
+    "mechanic": "SOUND_ONLY",
+    "culture_tags": ["improv"],
+    "timer_s_default": 90,
+    "prompts": [
+      {
+        "prompt_id": "pr_d_sound_1",
+        "body": {
+          "title": "Sound Only",
+          "text": "One performer reads their phone, then everyone's phones go FACE DOWN. Perform the sound. No words. The table guesses out loud.",
+          "cues": [
+            "the Dubai Metro door closing chime",
+            "a delivery bike at 2am",
+            "an auntie spotting you at the mall",
+            "the last 2% of phone battery (as a feeling)",
+            "a shisha coal being coaxed to life",
+            "Careem driver calling: 'where is your location?'"
+          ]
+        },
+        "difficulty": "LOW"
+      }
+    ]
+  },
+  {
+    "pack_id": "pk_e_christen_01",
+    "title": "E · The Christening",
+    "phase": "E",
+    "mechanic": "ALL_SUBMIT",
+    "culture_tags": ["room"],
+    "timer_s_default": 60,
+    "prompts": [
+      {
+        "prompt_id": "pr_e_name",
+        "body": { "title": "Name this crew", "text": "This table needs a name. Something only tonight would understand. Type your suggestion — Rawi reads them all, then we vote." },
+        "difficulty": "LOW"
+      }
+    ]
+  }
+]

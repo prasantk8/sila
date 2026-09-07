@@ -1,0 +1,258 @@
+[
+  {
+    "key": "LOBBY.WELCOME",
+    "variants": [
+      "Welcome in. I'm Rawi. Phones stay in hands, judgement stays at the door.",
+      "You made it. I'm Rawi — I run the game, you run the night.",
+      "Good evening. I'm Rawi, your host you'll never see. First rule: nobody performs alone here."
+    ]
+  },
+  {
+    "key": "LOBBY.SEAT_FILLED",
+    "variants": [
+      "{name} is in. The table grows stronger.",
+      "And that's {name} — welcome to the roster.",
+      "{name} has entered. Adjust your expectations upward."
+    ]
+  },
+  {
+    "key": "A.HOST_WELCOME",
+    "variants": [
+      "Six strangers, ninety minutes, one table. Let's find out who you all actually are.",
+      "Here's the deal: I ask, you play, and by the end of tonight this table has a name.",
+      "No introductions speech, I promise. We learn each other by playing. Ready?"
+    ]
+  },
+  {
+    "key": "A.HANDSHAKE_INTRO",
+    "variants": [
+      "First one's easy and anonymous. Type on your phone — I read them out, no names attached.",
+      "Warm-up: everyone types, nobody's name gets attached. I'm the only one who knows, and I never tell.",
+      "Phones up. Short answer, totally anonymous. Think of it as a secret ballot for your mood."
+    ]
+  },
+  {
+    "key": "A.SUBMIT_READBACK",
+    "variants": [
+      "Answers are in. Listen to this table: {phrase}. I already like this room.",
+      "Here's what came back, unsigned and unfiltered: {phrase}.",
+      "The anonymous verdicts: {phrase}. Somebody here is having a week."
+    ]
+  },
+  {
+    "key": "B.PHASE_INTRO",
+    "variants": [
+      "Now we play for real. Buzzers are live — fastest thumb takes the floor.",
+      "Round game. I ask, you buzz, first one in gets the glory or the groan.",
+      "Time to make it competitive. Buzz fast, answer faster, style points are real."
+    ]
+  },
+  {
+    "key": "B.ROUND_INTRO",
+    "variants": [
+      "Next question. Thumbs ready.",
+      "Here comes one. Don't overthink it.",
+      "New round. Somebody at this table knows this instantly."
+    ]
+  },
+  {
+    "key": "B_REACTION.ROUND_RESULT.generic",
+    "variants": [
+      "{winner} takes it! The table nods in respect.",
+      "That's {winner}'s point — smooth, decisive, slightly smug.",
+      "{winner} strikes. Somebody's been training for this."
+    ]
+  },
+  {
+    "key": "B_REACTION.ROUND_RESULT.photo_finish",
+    "variants": [
+      "{winner} by a whisker — {loser}, I demand a rematch on your behalf.",
+      "PHOTO FINISH. {winner} wins by less than a blink. {loser}, the machine says sorry.",
+      "That was milliseconds. {winner} edges {loser} — the buzzer gods are cruel tonight."
+    ]
+  },
+  {
+    "key": "B_REACTION.ROUND_RESULT.wrong",
+    "variants": [
+      "Bold, fast, and wrong — the noblest combination. Anyone else?",
+      "Not it! But points for conviction. The floor reopens.",
+      "Swing and a miss — I respect the speed though. Who's next?"
+    ]
+  },
+  {
+    "key": "TAP.READBACK",
+    "variants": [
+      "Votes are in — and this table is officially divided. I love it.",
+      "The results are on your screens. Some of you need to explain yourselves.",
+      "Tallied. Look around — you now know exactly who to argue with."
+    ]
+  },
+  {
+    "key": "COVER_DISCONNECT",
+    "variants": [
+      "{name} is answering the call of duty — the game rolls on.",
+      "{name} stepped out for a moment. We hold the fort.",
+      "{name}'s phone is having a moment. We continue — no one falls behind here."
+    ]
+  },
+  {
+    "key": "RESCUE_BEAT",
+    "variants": [
+      "You know what, that question was beneath this table. Let's get a better one.",
+      "I'm scrapping that one — my writers will hear about it. Next!",
+      "Okay, that landed like a brick in the pool. Moving swiftly on."
+    ]
+  },
+  {
+    "key": "CALLBACK",
+    "variants": [
+      "By the way — we are still not over {phrase}.",
+      "Quick reminder that {phrase} happened, at this very table, tonight.",
+      "Historians will ask about {phrase}. We were here."
+    ]
+  },
+  {
+    "key": "C.PHASE_INTRO",
+    "variants": [
+      "New game. Now the questions are about the people at this table — but every fact you hear was pre-approved by its owner. Nothing enters play without permission.",
+      "We go deeper. I've got true facts about each of you — ones you cleared for tonight. Buzz when you know whose it is.",
+      "Chapter two: the table itself. Everything I read was volunteered. Your job is to match the fact to the face."
+    ]
+  },
+  {
+    "key": "C.FACT_READ",
+    "variants": [
+      "Someone at this table: {fact}. Buzz when you know who.",
+      "True story from this very table — {fact}. Whose is it?",
+      "Listen carefully: {fact}. One of you is keeping a very straight face right now."
+    ]
+  },
+  {
+    "key": "C.REVEAL_CELEBRATE",
+    "variants": [
+      "Correct — that's {name}! The table knows you a little better now.",
+      "It's {name}! And honestly, it explains a lot.",
+      "That one belongs to {name}. Card unlocked — wear it proudly."
+    ]
+  },
+  {
+    "key": "C.REVEAL_MISS",
+    "variants": [
+      "Not them! The owner remains at large. Anyone else want to accuse?",
+      "Wrong suspect — the poker faces at this table are elite.",
+      "Nope. Whoever it is, they deserve an acting award. Buzz again."
+    ]
+  },
+  {
+    "key": "D.PHASE_INTRO",
+    "variants": [
+      "Enough answering. Now we build. Phones show your secret instructions — the rest happens out loud, at the table.",
+      "New rules: no right answers exist anymore. Check your phone for your part, then look up. Everything good happens face to face now.",
+      "The improv chapter. Your phone is your script, the table is your stage, and nobody here is allowed to be good at this."
+    ]
+  },
+  {
+    "key": "D.SET_INTRO",
+    "variants": [
+      "Your cues are on your screens. Take a breath — and go.",
+      "Everyone got their secret? Eyes up. Table's yours.",
+      "Cues delivered. Remember: commit hard, the worse the better."
+    ]
+  },
+  {
+    "key": "D.SET_CELEBRATE",
+    "variants": [
+      "That was unhinged and I'm keeping it forever.",
+      "Give it up for this table — that should not have worked and it did.",
+      "Beautiful. Somewhere a talent scout just felt a disturbance."
+    ]
+  },
+  {
+    "key": "E.RECAP_INTRO",
+    "variants": [
+      "Before we close — the record must show what happened here tonight. Starting with {phrase}.",
+      "Ninety minutes ago you were strangers. Then {phrase} happened, and here we are.",
+      "Let the record state: this table produced {phrase}. Historians, take note."
+    ]
+  },
+  {
+    "key": "E.RECAP_PERSON",
+    "variants": [
+      "{name} — {phrase}. That was a gift to this table.",
+      "And {name}: {phrase}. We all saw it. It counts forever.",
+      "For the record, {name} gave us {phrase} tonight. Respect."
+    ]
+  },
+  {
+    "key": "E.CHRISTENING",
+    "variants": [
+      "This crew needs a name. Type your best — I'll read them all, then we vote like adults. Loud, biased adults.",
+      "Naming ceremony. Suggestions on your phones, anonymous as always. The table picks the winner.",
+      "Every legend needs a title. Submit yours — the worst one usually wins, which is exactly right."
+    ]
+  },
+  {
+    "key": "E.CHRISTENED",
+    "variants": [
+      "Then it's decided. You are officially {cohort}. May the group chat be ever chaotic.",
+      "By the power vested in me by absolutely no one: welcome, {cohort}.",
+      "It's done — {cohort}. That name will confuse everyone who wasn't here, which is the point."
+    ]
+  },
+  {
+    "key": "E.POLL_INTRO",
+    "variants": [
+      "One tap before you go: when does {cohort} ride again? Pick a night while the chai is still warm.",
+      "Last move of the night — tap the date that works. Future-you will thank present-you.",
+      "The only homework: tap when we do this again. It takes one thumb and zero excuses."
+    ]
+  },
+  {
+    "key": "E.SEND_OFF",
+    "variants": [
+      "That's the night. {cohort} — next round is {slot_time}. I'll keep the seats warm. Yalla, go be friends.",
+      "And we're done. Remember {phrase}, remember each other's names, and remember: {slot_time}. Goodnight from Rawi.",
+      "The room closes, the crew doesn't. {cohort}, see you {slot_time}. It was an honour to host you."
+    ]
+  },
+  {
+    "key": "SAFETY.RESUME",
+    "variants": [
+      "Thank you for the pause. We pick up gently — no scores were harmed.",
+      "We're back. Deep breath, low stakes, next round when you're ready.",
+      "Resuming. The game waited for us — as it should."
+    ]
+  },
+  {
+    "key": "PAUSE.ON",
+    "variants": [
+      "Hold that thought — food's here. The clock stops for shawarma, always.",
+      "Quick intermission. Scores are frozen, drinks are not.",
+      "We pause. Stretch, order, breathe — the game keeps your place."
+    ]
+  },
+  {
+    "key": "PAUSE.RESUME",
+    "variants": [
+      "Aaand we're back. Where were we? Right — someone was about to be brilliant.",
+      "Intermission over. Thumbs to buzzers, hearts to eleven.",
+      "The clock breathes again. Next round incoming."
+    ]
+  },
+  {
+    "key": "LOBBY.CANCELLED",
+    "variants": [
+      "Tonight didn't gather enough of us — that's on the stars, not on you. Your next room is on the house, and the good seats are yours.",
+      "We need four to make the magic and we fell short. Priority rebooking is already on your account — this one's our miss.",
+      "Not enough players landed tonight. You showed up, and that counts: next session's covered, front of the queue."
+    ]
+  },
+  {
+    "key": "TIME.LAST_ORDERS",
+    "variants": [
+      "Two more rounds in this chapter, then we turn the page.",
+      "We're near the end of this act — make these next ones count.",
+      "Final stretch of this round. Leave nothing in the tank."
+    ]
+  }
+]

@@ -1,0 +1,267 @@
+/* ============================================================
+   SILA player surface — "quiet luxury"
+   The screen doesn't flash. It breathes. (README Module 1 HX)
+   Phase → chroma mapping lives on body[data-phase]; the tween is
+   1600ms so state changes are felt before they're noticed.
+   ============================================================ */
+
+:root {
+  --ink: #0c0b10;
+  --bone: #ede8df;
+  --bone-dim: rgba(237, 232, 223, 0.55);
+  --bone-faint: rgba(237, 232, 223, 0.22);
+  --hair: rgba(237, 232, 223, 0.12);
+  --card: rgba(237, 232, 223, 0.045);
+  --chroma: #c98a3d; /* overridden per phase */
+  --danger: #b0654f;
+  --radius: 18px;
+  --font-ui: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+}
+
+body[data-phase="LOBBY"]       { --chroma: #c98a3d; }
+body[data-phase="A_BASELINE"]  { --chroma: #d4a24e; }
+body[data-phase="B_REACTION"]  { --chroma: #2ea3a0; }
+body[data-phase="C_DISCOVERY"] { --chroma: #7c6bd6; }
+body[data-phase="D_IMPROV"]    { --chroma: #e0776b; }
+body[data-phase="E_LOOP"]      { --chroma: #e3b04b; }
+body[data-phase="CLOSED"]      { --chroma: #e3b04b; }
+body[data-phase="SAFETY"]      { --chroma: #8a93a6; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  background: var(--ink);
+  color: var(--bone);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.45;
+  overflow-x: hidden;
+  transition: --chroma 1.6s ease; /* progressive; gradient below carries the real tween */
+}
+
+/* Breathing background — two soft radial pools of the phase chroma. */
+#bg {
+  position: fixed; inset: -20%;
+  z-index: 0;
+  background:
+    radial-gradient(60% 50% at 20% 15%, color-mix(in oklab, var(--chroma) 26%, transparent), transparent 70%),
+    radial-gradient(55% 45% at 85% 90%, color-mix(in oklab, var(--chroma) 16%, transparent), transparent 70%);
+  filter: blur(2px);
+  animation: breathe 8s ease-in-out infinite;
+  transition: background 1.6s ease;
+  pointer-events: none;
+}
+@keyframes breathe {
+  0%, 100% { opacity: 0.75; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.035); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #bg { animation: none; }
+  * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+.screen { position: relative; z-index: 1; min-height: 100dvh; padding: max(env(safe-area-inset-top), 18px) 20px calc(env(safe-area-inset-bottom) + 18px); max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; }
+
+/* ---------------------------------------------------------- join */
+#join { justify-content: center; gap: 34px; }
+.brand { text-align: center; }
+.mark { width: 52px; height: 52px; margin: 0 auto 14px; border: 1.5px solid var(--bone); border-radius: 50%; position: relative; }
+.mark::after { content: ""; position: absolute; inset: 0; margin: auto; width: 10px; height: 10px; border-radius: 50%; background: var(--chroma); }
+.brand h1 { font-family: var(--font-display); font-weight: 300; font-size: 40px; letter-spacing: 0.34em; margin-left: 0.34em; }
+.tag { color: var(--bone-dim); margin-top: 6px; font-size: 14px; }
+
+#join-form { display: flex; flex-direction: column; gap: 16px; }
+.field { display: flex; flex-direction: column; gap: 7px; }
+.field span { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--bone-dim); }
+input {
+  background: var(--card); border: 1px solid var(--hair); border-radius: 12px;
+  color: var(--bone); font: inherit; padding: 13px 14px; outline: none;
+  transition: border-color 0.25s ease;
+}
+input:focus { border-color: color-mix(in oklab, var(--chroma) 65%, transparent); }
+input::placeholder { color: var(--bone-faint); }
+
+.vault { border: 1px solid var(--hair); border-radius: var(--radius); padding: 14px 16px; }
+.vault summary { cursor: pointer; color: var(--bone-dim); font-size: 14px; list-style: none; }
+.vault summary::-webkit-details-marker { display: none; }
+.vault summary em { color: var(--bone-faint); font-style: normal; }
+.vault[open] summary { margin-bottom: 12px; }
+.vault .field { margin-top: 12px; }
+.consent { font-size: 12.5px; color: var(--bone-dim); border-left: 2px solid var(--chroma); padding-left: 10px; }
+
+button { font: inherit; cursor: pointer; }
+#join-btn {
+  margin-top: 6px; padding: 15px; border: none; border-radius: 14px;
+  background: var(--bone); color: var(--ink); font-weight: 600; letter-spacing: 0.03em;
+  transition: transform 0.12s ease, opacity 0.2s ease;
+}
+#join-btn:active { transform: scale(0.985); }
+#join-btn[disabled] { opacity: 0.5; }
+.err { color: #d9a08c; font-size: 14px; min-height: 1.2em; text-align: center; }
+
+/* ---------------------------------------------------------- room chrome */
+#room { gap: 16px; }
+#topbar { display: flex; align-items: center; gap: 12px; }
+#phase-chip {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: color-mix(in oklab, var(--chroma) 85%, var(--bone));
+  border: 1px solid color-mix(in oklab, var(--chroma) 40%, transparent);
+  padding: 6px 11px; border-radius: 999px;
+  transition: color 1.6s ease, border-color 1.6s ease;
+}
+#conn-dot { width: 7px; height: 7px; border-radius: 50%; background: #6fae7d; transition: background 0.4s; }
+#conn-dot.off { background: var(--danger); animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: 0.35; } }
+
+#scores { flex: 1; display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; justify-content: flex-end; }
+#scores::-webkit-scrollbar { display: none; }
+.score-pill { display: flex; align-items: baseline; gap: 5px; font-size: 13px; color: var(--bone-dim); white-space: nowrap; }
+.score-pill b { color: var(--bone); font-weight: 600; font-variant-numeric: tabular-nums; }
+.score-pill.bump b { animation: bump 0.7s ease; color: var(--chroma); }
+@keyframes bump { 30% { transform: translateY(-3px) scale(1.18); } }
+.score-pill.me { color: var(--bone); }
+
+#more-btn { background: none; border: 1px solid var(--hair); color: var(--bone-dim); width: 34px; height: 34px; border-radius: 50%; font-size: 18px; line-height: 1; }
+
+/* ---------------------------------------------------------- Rawi's stage */
+#stage { min-height: 88px; display: flex; align-items: center; }
+#caption {
+  width: 100%; padding: 18px 20px;
+  background: var(--card); border: 1px solid var(--hair); border-radius: var(--radius);
+  border-left: 2.5px solid var(--chroma);
+  transition: border-color 1.6s ease;
+}
+#caption-text { font-family: var(--font-display); font-weight: 400; font-size: 19px; line-height: 1.4; letter-spacing: 0.005em; }
+#caption.speaking #caption-text { color: var(--bone); }
+#caption:not(.speaking) #caption-text { color: var(--bone-dim); }
+
+/* ---------------------------------------------------------- prompt card */
+#prompt-card {
+  position: relative;
+  background: var(--card); border: 1px solid var(--hair); border-radius: var(--radius);
+  padding: 20px; display: flex; flex-direction: column; gap: 12px;
+  animation: rise 0.5s ease;
+}
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+#prompt-title { font-family: var(--font-display); font-weight: 600; font-size: 15px; letter-spacing: 0.02em; color: color-mix(in oklab, var(--chroma) 80%, var(--bone)); }
+#prompt-text { font-size: 17px; }
+
+#timer-ring { position: absolute; top: 14px; right: 14px; width: 40px; height: 40px; }
+#timer-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+#timer-ring circle { fill: none; stroke-width: 2.4; }
+#timer-ring .track { stroke: var(--hair); }
+#timer-arc { stroke: var(--chroma); stroke-linecap: round; stroke-dasharray: 100.53; transition: stroke-dashoffset 1s linear, stroke 1.6s ease; }
+#timer-label { position: absolute; inset: 0; display: grid; place-items: center; font-size: 11px; font-variant-numeric: tabular-nums; color: var(--bone-dim); }
+
+#cue-box { display: flex; flex-direction: column; gap: 6px; padding: 16px; border: 1px dashed color-mix(in oklab, var(--chroma) 45%, transparent); border-radius: 12px; text-align: center; }
+.cue-eyebrow, .cue-hint { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bone-dim); }
+#cue-text { font-family: var(--font-display); font-size: 22px; font-weight: 600; }
+
+#choices { display: flex; flex-direction: column; gap: 10px; }
+.choice {
+  padding: 15px 16px; border: 1px solid var(--hair); border-radius: 12px;
+  background: transparent; color: var(--bone); text-align: left; font-size: 16px;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.1s ease;
+}
+.choice:active { transform: scale(0.99); }
+.choice.picked { border-color: var(--chroma); background: color-mix(in oklab, var(--chroma) 14%, transparent); }
+.choice[disabled]:not(.picked) { opacity: 0.45; }
+
+#submit-form, #answer-form { display: flex; gap: 8px; flex-wrap: wrap; }
+#submit-form input, #answer-form input { flex: 1; min-width: 0; }
+#submit-form button, #answer-form button {
+  padding: 12px 18px; border: none; border-radius: 12px; background: var(--bone); color: var(--ink); font-weight: 600;
+}
+.answer-lead { width: 100%; font-size: 13px; color: var(--bone-dim); }
+.submitted-note { font-size: 13.5px; color: color-mix(in oklab, var(--chroma) 85%, var(--bone)); }
+
+#tally { display: flex; flex-direction: column; gap: 8px; }
+.tally-row { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; font-size: 14px; align-items: center; }
+.tally-bar { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: var(--hair); overflow: hidden; }
+.tally-fill { height: 100%; background: var(--chroma); border-radius: 3px; transition: width 0.8s ease; }
+.tally-n { color: var(--bone-dim); font-variant-numeric: tabular-nums; }
+
+/* ---------------------------------------------------------- THE BUZZER */
+#buzzer-zone { display: grid; place-items: center; padding: 8px 0 2px; }
+#buzzer {
+  width: min(58vw, 218px); aspect-ratio: 1; border-radius: 50%;
+  border: 1.5px solid color-mix(in oklab, var(--chroma) 55%, transparent);
+  background:
+    radial-gradient(circle at 50% 34%, color-mix(in oklab, var(--chroma) 34%, var(--ink)), var(--ink) 74%);
+  color: var(--bone);
+  font-family: var(--font-ui); font-weight: 600; font-size: 19px; letter-spacing: 0.28em; text-indent: 0.28em;
+  box-shadow:
+    0 0 0 10px color-mix(in oklab, var(--chroma) 7%, transparent),
+    0 18px 42px -16px color-mix(in oklab, var(--chroma) 55%, transparent),
+    inset 0 -10px 22px rgba(0,0,0,0.55),
+    inset 0 2px 4px color-mix(in oklab, var(--chroma) 40%, transparent);
+  transition: transform 60ms ease, box-shadow 0.4s ease, border-color 1.6s ease, filter 0.3s ease;
+  touch-action: manipulation; user-select: none; -webkit-user-select: none;
+}
+#buzzer:active, #buzzer.pressed { transform: scale(0.955); box-shadow: 0 0 0 6px color-mix(in oklab, var(--chroma) 10%, transparent), 0 8px 22px -12px color-mix(in oklab, var(--chroma) 55%, transparent), inset 0 -4px 14px rgba(0,0,0,0.6); }
+#buzzer.locked-you { border-color: var(--chroma); filter: brightness(1.25) saturate(1.1); }
+#buzzer.locked-you #buzzer-label::after { content: " ✓"; letter-spacing: normal; }
+#buzzer.locked-other { filter: grayscale(0.85) brightness(0.6); pointer-events: none; }
+#buzzer[disabled] { filter: grayscale(0.85) brightness(0.55); pointer-events: none; }
+
+/* ---------------------------------------------------------- table cards */
+.section-label { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--bone-faint); margin-bottom: 10px; }
+#members { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.member {
+  background: var(--card); border: 1px solid var(--hair); border-radius: 14px; padding: 12px 13px;
+  display: flex; flex-direction: column; gap: 6px; min-height: 64px;
+  transition: border-color 0.6s ease;
+}
+.member.me { border-color: color-mix(in oklab, var(--chroma) 40%, transparent); }
+.member.gone { opacity: 0.4; }
+.member-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.member-name { font-weight: 600; font-size: 15px; }
+.member-name .spk { font-size: 10px; color: var(--bone-dim); }
+.member-score { font-variant-numeric: tabular-nums; color: var(--bone-dim); font-size: 13px; }
+.member-facts { display: flex; flex-direction: column; gap: 4px; }
+.fact { font-size: 12.5px; color: var(--bone-dim); border-left: 2px solid color-mix(in oklab, var(--chroma) 60%, transparent); padding-left: 7px; animation: factIn 0.9s ease; }
+@keyframes factIn { from { opacity: 0; transform: translateX(-4px); } }
+.fact b { color: var(--bone); font-weight: 500; }
+.fact-slot { font-size: 12px; color: var(--bone-faint); font-style: italic; }
+
+/* ---------------------------------------------------------- reacts */
+#react-bar { margin-top: auto; display: flex; justify-content: center; gap: 14px; padding-top: 10px; }
+.react {
+  width: 52px; height: 52px; border-radius: 50%; font-size: 22px;
+  background: var(--card); border: 1px solid var(--hair);
+  transition: transform 0.12s ease;
+}
+.react:active { transform: scale(1.2); }
+
+/* ---------------------------------------------------------- send-off */
+#sendoff { text-align: center; padding: 30px 10px; display: flex; flex-direction: column; gap: 12px; animation: rise 0.8s ease; }
+.so-eyebrow { font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--bone-dim); }
+#so-name { font-family: var(--font-display); font-weight: 600; font-size: 34px; color: var(--chroma); }
+#so-slot { font-size: 16px; }
+#so-moments { list-style: none; display: flex; flex-direction: column; gap: 6px; color: var(--bone-dim); font-size: 14px; }
+#so-moments li::before { content: "— "; color: var(--chroma); }
+.so-foot { margin-top: 8px; color: var(--bone-faint); font-size: 13px; }
+
+/* ---------------------------------------------------------- overlays */
+#overlay { position: fixed; inset: 0; z-index: 20; background: rgba(12, 11, 16, 0.86); backdrop-filter: blur(6px); display: grid; place-items: center; padding: 30px; }
+#overlay-card { text-align: center; max-width: 320px; display: flex; flex-direction: column; gap: 10px; }
+#overlay-icon { font-size: 30px; }
+#overlay-title { font-family: var(--font-display); font-weight: 400; font-size: 24px; }
+#overlay-text { color: var(--bone-dim); font-size: 15px; }
+
+#sheet { position: fixed; inset: 0; z-index: 30; background: rgba(12,11,16,0.7); display: flex; align-items: flex-end; }
+#sheet-card { width: 100%; max-width: 480px; margin: 0 auto; background: #17151d; border-radius: 20px 20px 0 0; padding: 18px 18px calc(env(safe-area-inset-bottom) + 18px); display: flex; flex-direction: column; gap: 10px; }
+.sheet-item { display: flex; flex-direction: column; gap: 3px; text-align: left; padding: 14px 15px; border: 1px solid var(--hair); border-radius: 12px; background: var(--card); color: var(--bone); font-size: 15px; }
+.sheet-item small { color: var(--bone-dim); font-size: 12.5px; font-weight: 400; }
+.sheet-item.hold { border-color: color-mix(in oklab, #8a93a6 50%, transparent); position: relative; overflow: hidden; }
+.sheet-item.hold .holdbar { position: absolute; left: 0; bottom: 0; height: 2.5px; width: 0; background: #8a93a6; transition: width 1.2s linear; }
+.sheet-item.hold.holding .holdbar { width: 100%; }
+.sheet-item.dim { color: var(--bone-dim); border: none; background: none; text-align: center; }
+
+.toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 86px); transform: translateX(-50%); z-index: 40; background: #17151d; border: 1px solid var(--hair); color: var(--bone); padding: 10px 16px; border-radius: 999px; font-size: 14px; animation: toastIn 0.3s ease; white-space: nowrap; max-width: 90vw; overflow: hidden; text-overflow: ellipsis; }
+@keyframes toastIn { from { opacity: 0; transform: translate(-50%, 6px); } }
+
+.flying-emoji { position: fixed; z-index: 15; font-size: 26px; pointer-events: none; animation: fly 1.6s ease-out forwards; }
+@keyframes fly { to { transform: translateY(-130px) scale(1.25); opacity: 0; } }

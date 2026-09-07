@@ -1,0 +1,14 @@
+{
+  "name": "SILA",
+  "short_name": "SILA",
+  "description": "Tonight, strangers. Later, a group chat.",
+  "start_url": "/play",
+  "scope": "/play",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0C0B10",
+  "theme_color": "#0C0B10",
+  "icons": [
+    { "src": "/play/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

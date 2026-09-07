@@ -1,0 +1,53 @@
+{
+  "_readme": "Sample roster for dry-runs (the six players used throughout the blueprint's examples). Not auto-loaded. Use it two ways: (1) copy names/vault facts into the /play join form on six browser tabs, or (2) feed it to scripts/sim.ts. Vault facts are the C-phase WHOSE_IS_THIS ammunition — read one aloud via C.FACT_READ, open a pr_c_whose_* round, then Reveal-Grant to the owner when guessed.",
+  "players": [
+    {
+      "display": "Ana",
+      "affinity_tags": ["lisbon", "pastel_de_nata", "padel"],
+      "vault": {
+        "home_city": "grew up in Lisbon, two streets from the water",
+        "hidden_skill": "plays padel at a suspiciously competitive level"
+      }
+    },
+    {
+      "display": "Raj",
+      "affinity_tags": ["mumbai", "cricket", "street_food"],
+      "vault": {
+        "comfort_food": "vada pav from one exact stall near Dadar station",
+        "claim_to_fame": "once bowled out a Ranji Trophy player in a gully match"
+      }
+    },
+    {
+      "display": "Kim",
+      "affinity_tags": ["seoul", "street_food", "design"],
+      "vault": {
+        "comfort_food": "tteokbokki from the stall behind her school",
+        "hidden_skill": "can fold a perfect paper crane in under twenty seconds"
+      }
+    },
+    {
+      "display": "Omar",
+      "affinity_tags": ["amman", "grandmothers", "football"],
+      "vault": {
+        "family_legend": "his grandmother once argued a market vendor into paying HER",
+        "first_job": "sold knafeh from a bicycle for one glorious summer"
+      }
+    },
+    {
+      "display": "Lena",
+      "affinity_tags": ["berlin", "karak", "climbing"],
+      "vault": {
+        "dubai_habit": "thinks about karak at least four times a day",
+        "hidden_skill": "climbed a wall in a wedding dress, on purpose"
+      }
+    },
+    {
+      "display": "Tomas",
+      "affinity_tags": ["prague", "metro_maps", "photography"],
+      "vault": {
+        "odd_hobby": "collects photos of metro maps from every city he visits",
+        "first_dubai_memory": "got lost in Deira for three hours and loved every minute"
+      }
+    }
+  ]
+}
