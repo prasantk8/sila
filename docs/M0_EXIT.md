@@ -6,7 +6,7 @@ M0 is "done" when it has run **three real Dubai rooms** end to end. The build is
 - [x] Player PWA: installable, phase-keyed breathing UI, physical buzzer (<50 ms debounce + haptic), time-sync, captions + device TTS, reconnect.
 - [x] Operator Console: phase gates, prompt deck, Rawi line deck with slot-fill, live T0 roster telemetry, directives, moments, safety hold, E-loop tools, outcome view.
 - [x] Engine: single-writer actor, JSONL log (append-before-fanout), snapshot restore, RTT-compensated buzz + photo-finish, all mechanics, safety hold with restricted incident file.
-- [x] Soak test: 41 assertions green (`npm run sim`) — buzz fairness, photo finish, tap/submit, submission privacy, safety freeze, restore, full E2E.
+- [x] Soak test: 54 assertions green (`npm run sim`) — buzz fairness, photo finish, tap/submit, submission privacy, safety freeze, restore, full E2E.
 - [x] Docs: README, PROTOCOL, ARCHITECTURE, OPERATOR_RUNBOOK, DECISIONS, this checklist.
 
 ## Live-room criteria (to collect on the ground)
