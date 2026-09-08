@@ -1,0 +1,905 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SILA — Stage screen (direction prototype)</title>
+<!--
+  SILA next version · stage-screen direction prototype
+  ----------------------------------------------------
+  One file. No build. No dependencies. Open it directly in a browser.
+  Vanilla JS to match the repo idiom (the runtime has exactly one dependency, `ws`).
+
+  TOKEN DISCIPLINE: every colour, size, duration and font lives in :root below.
+  Nothing after :root may contain a literal hex, a literal px, or a font stack.
+  Geometry constants in JS are SVG user units (data), not design tokens.
+
+  Fonts load from the same CDN the shipping product uses, with a real local
+  fallback stack so the file still reads correctly offline. A venue build must
+  self-host the woff2 — a stage screen cannot depend on a CDN at showtime.
+
+  Keys:  1/2/3 seat count (2/4/6) · space next beat · L laugh · R reveal
+         S standings · P phone · M reduced motion · A autoplay
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+:root{
+  /* ---- ground -------------------------------------------------------- */
+  --stg-ink:#08070B;
+  --stg-ink-lift:#0E0D13;
+  --stg-bone:#F6F2EA;          /* 17.99:1 on ink */
+  --stg-dim:#A8A39B;           /*  8.01:1 — lowest value allowed to carry words */
+  --stg-faint:#6E6A73;         /*  3.80:1 — hairlines and inactive tracks ONLY */
+  --stg-rest:#8B8792;          /*  5.72:1 — an arc at rest, never invisible */
+  --stg-notch:#F6F2EA;
+  --stg-yes:#7FC98C;           /* 10.17:1 */
+  --stg-no:#A8A39B;            /*  8.01:1 — wrong is grey, never red */
+
+  /* ---- phase chroma (stage-grade) ------------------------------------ */
+  --stg-amber:#E8A94E;         /*  9.77:1 */
+  --stg-teal:#3FD2C7;          /* 10.76:1 */
+  --stg-violet:#A594F9;        /*  7.85:1 */
+  --stg-coral:#FF9179;         /*  9.16:1 */
+  --stg-gold:#F5C65A;          /* 12.54:1 */
+  --stg-phase:var(--stg-amber);
+
+  /* ---- type ---------------------------------------------------------- */
+  --stg-font-display:"Fraunces","Iowan Old Style",Georgia,"Times New Roman",serif;
+  --stg-font-ui:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --stg-t-plate:9vh;
+  --stg-t-prompt:5.4vh;
+  --stg-t-name:3.6vh;
+  --stg-t-caption:3.2vh;
+  --stg-t-num:2.8vh;
+  --stg-t-label:1.9vh;         /* floor. nothing on the stage is smaller. */
+  --stg-track-label:.28em;
+  --stg-track-plate:-.015em;
+
+  /* ---- space and geometry -------------------------------------------- */
+  --stg-s1:.5vh; --stg-s2:1vh; --stg-s3:2vh; --stg-s4:4vh; --stg-s5:8vh;
+  --stg-strip-h:8vh;
+  --stg-ring-h:72vh;
+  --stg-third-h:20vh;
+  --stg-plate-w:92vh;
+  --stg-hair:1px;
+  --stg-rad-1:.6vh; --stg-rad-2:1.4vh; --stg-rad-pill:999px;
+
+  /* ---- motion: cuts, not bounce -------------------------------------- */
+  --stg-cut:0ms;
+  --stg-snap:120ms;
+  --stg-beat:400ms;
+  --stg-hold:1200ms;
+  --stg-fade:2000ms;
+  --stg-breath:8s;
+  --stg-ease:cubic-bezier(.2,0,0,1);
+
+  /* ---- companion phone ------------------------------------------------ */
+  --ph-ink:#0C0B10;
+  --ph-w:15vh; --ph-h:31vh; --ph-rad:2.6vh;
+  --ph-luma:1;                 /* driven by state: stage brighter -> phone darker */
+
+  /* ---- director utility (not part of the design) ---------------------- */
+  --dir-bg:rgba(14,13,19,.92);
+  --dir-mono:ui-monospace,"SF Mono",Menlo,monospace;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--stg-ink);color:var(--stg-bone);
+  font-family:var(--stg-font-ui);overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ====================================================================== */
+/* STAGE                                                                  */
+/* ====================================================================== */
+#stage{height:100vh;display:grid;grid-template-rows:var(--stg-strip-h) 1fr var(--stg-third-h)}
+
+/* ---- top strip ---- */
+#strip{
+  display:flex;align-items:center;gap:var(--stg-s4);
+  padding:0 var(--stg-s4);
+  border-bottom:var(--stg-hair) solid var(--stg-faint);
+}
+.lozenge{
+  display:inline-flex;align-items:center;gap:var(--stg-s2);
+  font-size:var(--stg-t-label);letter-spacing:var(--stg-track-label);
+  color:var(--stg-phase);
+  border:var(--stg-hair) solid var(--stg-phase);
+  border-radius:var(--stg-rad-pill);
+  padding:var(--stg-s1) var(--stg-s3);
+  transition:color var(--stg-fade) var(--stg-ease),border-color var(--stg-fade) var(--stg-ease);
+}
+#act{font-family:var(--stg-font-display);letter-spacing:normal;font-size:var(--stg-t-label)}
+#strip .spacer{flex:1}
+#room-code,#clock{font-size:var(--stg-t-label);color:var(--stg-dim);letter-spacing:var(--stg-track-label);font-variant-numeric:tabular-nums}
+
+/* ---- ring area ---- */
+#ring-wrap{position:relative;display:grid;place-items:center}
+#ring{
+  width:var(--stg-ring-h);height:var(--stg-ring-h);
+  animation:breathe var(--stg-breath) ease-in-out infinite;
+}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.006)}}
+#ring.frozen{animation:none}
+
+/* ---- the plate: a band of text crossing the ring ---- */
+#plate{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:var(--stg-plate-w);max-width:100%;
+  text-align:center;pointer-events:none;
+  display:flex;flex-direction:column;align-items:center;gap:var(--stg-s3);
+}
+#plate-over{
+  font-size:var(--stg-t-label);letter-spacing:var(--stg-track-label);
+  color:var(--stg-dim);min-height:0;
+}
+#plate-main{
+  font-family:var(--stg-font-display);font-weight:400;
+  font-size:var(--stg-t-prompt);line-height:1.16;letter-spacing:var(--stg-track-plate);
+  text-wrap:balance;
+}
+#plate.hero #plate-main{font-size:var(--stg-t-plate);font-weight:600;color:var(--stg-phase)}
+#plate.hero #plate-main .surname{color:var(--stg-bone)}
+#plate-sub{font-size:var(--stg-t-caption);color:var(--stg-dim);font-family:var(--stg-font-display)}
+#plate-delta{
+  font-size:var(--stg-t-num);color:var(--stg-bone);
+  font-variant-numeric:tabular-nums;letter-spacing:var(--stg-track-label);
+}
+.plate-in{animation:platein var(--stg-beat) var(--stg-ease) both}
+@keyframes platein{from{opacity:0}to{opacity:1}}
+
+/* ---- reveal card ---- */
+#reveal{
+  position:absolute;left:50%;top:50%;
+  width:var(--stg-plate-w);max-width:100%;
+  transform:translate(-50%,-50%);
+  background:var(--stg-ink-lift);
+  border:var(--stg-hair) solid var(--stg-phase);
+  border-radius:var(--stg-rad-2);
+  padding:var(--stg-s4);
+  display:flex;flex-direction:column;gap:var(--stg-s2);align-items:center;text-align:center;
+}
+#reveal[hidden]{display:none}
+#reveal .who{font-size:var(--stg-t-name);font-weight:600;color:var(--stg-phase)}
+#reveal .fact{font-family:var(--stg-font-display);font-size:var(--stg-t-caption);line-height:1.3}
+#reveal.slide{animation:revealin var(--stg-beat) var(--stg-ease) both}
+@keyframes revealin{from{opacity:0;transform:translate(-50%,-50%) scale(.97)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+
+/* ---- standings: the ring stands up, briefly ---- */
+#standings{
+  position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;
+  gap:var(--stg-s2);padding:0 var(--stg-s5);background:var(--stg-ink);
+}
+#standings[hidden]{display:none}
+.st-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:var(--stg-s3)}
+.st-name{font-size:var(--stg-t-name);font-weight:600;min-width:var(--stg-plate-w);max-width:0}
+.st-bar{height:var(--stg-s3);border-radius:var(--stg-rad-pill);background:var(--stg-phase);transition:width var(--stg-beat) var(--stg-ease)}
+.st-num{font-size:var(--stg-t-num);font-variant-numeric:tabular-nums;color:var(--stg-dim)}
+#st-note{margin-top:var(--stg-s3);font-size:var(--stg-t-label);letter-spacing:var(--stg-track-label);color:var(--stg-faint);text-align:center}
+
+/* ---- lower third: Rawi's, permanently ---- */
+#third{
+  display:flex;align-items:center;gap:var(--stg-s4);
+  padding:0 var(--stg-s4);
+  border-top:var(--stg-hair) solid var(--stg-faint);
+}
+#caption{
+  flex:1;font-family:var(--stg-font-display);font-weight:400;
+  font-size:var(--stg-t-caption);line-height:1.25;
+  border-left:var(--stg-s1) solid var(--stg-phase);
+  padding-left:var(--stg-s3);
+  transition:border-color var(--stg-fade) var(--stg-ease);
+}
+#nameplate{
+  font-size:var(--stg-t-label);letter-spacing:var(--stg-track-label);
+  color:var(--stg-dim);white-space:nowrap;
+}
+#nameplate b{color:var(--stg-bone);font-weight:600}
+
+/* ====================================================================== */
+/* SVG RING                                                               */
+/* ====================================================================== */
+.arc{fill:none;stroke-linecap:butt;transition:stroke var(--stg-snap) var(--stg-ease),stroke-width var(--stg-beat) var(--stg-ease),opacity var(--stg-snap) var(--stg-ease)}
+.arc.rest{stroke:var(--stg-rest)}
+.arc.live{stroke:var(--stg-phase)}
+.arc.won{stroke:var(--stg-phase)}
+.arc.empty{stroke:var(--stg-faint);stroke-dasharray:14 12}
+.notch{stroke:var(--stg-notch);stroke-width:3;opacity:.85}
+.seat-name{fill:var(--stg-bone);font-family:var(--stg-font-ui);font-weight:600;font-size:50px}
+.seat-name.muted{fill:var(--stg-dim)}
+.seat-score{fill:var(--stg-dim);font-family:var(--stg-font-ui);font-weight:600;font-size:39px;font-variant-numeric:tabular-nums}
+.seat-empty{fill:var(--stg-faint);font-family:var(--stg-font-ui);font-size:39px;letter-spacing:.2em}
+#timer-track{fill:none;stroke:var(--stg-faint);stroke-width:3}
+#timer-arc{fill:none;stroke:var(--stg-phase);stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset 1s linear}
+#timer-arc.frozen{transition:none}
+#chord{stroke:var(--stg-bone);stroke-width:3;opacity:0}
+#chord.on{opacity:1;transition:opacity var(--stg-snap) var(--stg-ease)}
+#bloom{fill:none;stroke:var(--stg-amber);stroke-width:10;opacity:0}
+#bloom.go{animation:bloom var(--stg-beat) var(--stg-ease) both}
+@keyframes bloom{from{opacity:.9;r:330px}to{opacity:0;r:470px}}
+.delta{fill:var(--stg-bone);font-family:var(--stg-font-ui);font-weight:600;font-size:39px;font-variant-numeric:tabular-nums}
+.gain{fill:var(--stg-phase);font-family:var(--stg-font-ui);font-weight:600;font-size:50px}
+.gain.go{animation:gain var(--stg-hold) var(--stg-ease) both}
+@keyframes gain{0%{opacity:0;transform:translateY(0)}25%{opacity:1}100%{opacity:0;transform:translateY(-40px)}}
+
+/* ====================================================================== */
+/* COMPANION PHONE — proves the inverse-luminance rule                    */
+/* ====================================================================== */
+#phone{
+  position:fixed;right:var(--stg-s4);top:50%;transform:translateY(-50%);
+  width:var(--ph-w);height:var(--ph-h);
+  background:var(--ph-ink);
+  border:var(--stg-hair) solid var(--stg-faint);
+  border-radius:var(--ph-rad);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:var(--stg-s2);padding:var(--stg-s3);
+  opacity:var(--ph-luma);
+  transition:opacity var(--stg-beat) var(--stg-ease);
+  overflow:hidden;
+}
+#phone[hidden]{display:none}
+#ph-word{font-size:var(--stg-t-label);letter-spacing:var(--stg-track-label);color:var(--stg-dim);text-align:center}
+#ph-arc{width:100%;height:var(--stg-s5)}
+#ph-buzz{
+  width:80%;aspect-ratio:1;border-radius:var(--stg-rad-pill);
+  border:var(--stg-hair) solid var(--stg-phase);
+  background:radial-gradient(circle at 50% 34%,color-mix(in oklab,var(--stg-phase) 34%,var(--ph-ink)),var(--ph-ink) 74%);
+  color:var(--stg-bone);font-family:var(--stg-font-ui);font-weight:600;
+  font-size:var(--stg-t-label);letter-spacing:var(--stg-track-label);
+  display:grid;place-items:center;
+  transition:filter var(--stg-snap) var(--stg-ease),opacity var(--stg-snap) var(--stg-ease);
+}
+#ph-buzz.dead{filter:grayscale(1) brightness(.4)}
+#ph-dot{width:var(--stg-s2);height:var(--stg-s2);border-radius:var(--stg-rad-pill);background:var(--stg-faint)}
+#ph-label{
+  position:absolute;bottom:var(--stg-s1);left:0;right:0;text-align:center;
+  font-size:var(--stg-t-label);color:var(--stg-faint);letter-spacing:var(--stg-track-label);
+  transform:scale(.7);
+}
+
+/* ====================================================================== */
+/* DIRECTOR — a dev utility, deliberately not styled as part of the show  */
+/* ====================================================================== */
+#dir{
+  position:fixed;top:var(--stg-s3);right:var(--stg-s3);z-index:9;
+  background:var(--dir-bg);border:var(--stg-hair) solid var(--stg-faint);
+  border-radius:var(--stg-rad-1);padding:var(--stg-s2);
+  display:flex;flex-direction:column;gap:var(--stg-s1);
+  font-family:var(--dir-mono);opacity:.4;transition:opacity var(--stg-snap) var(--stg-ease);
+  max-width:var(--stg-plate-w);
+}
+#dir:hover,#dir:focus-within{opacity:1}
+#dir .grp{display:flex;gap:var(--stg-s1);flex-wrap:wrap;align-items:center}
+#dir .cap{font-size:var(--stg-t-label);color:var(--stg-faint);letter-spacing:var(--stg-track-label);transform:scale(.8);transform-origin:left}
+#dir button{
+  font:inherit;font-size:var(--stg-t-label);cursor:pointer;
+  background:var(--stg-ink);color:var(--stg-dim);
+  border:var(--stg-hair) solid var(--stg-faint);border-radius:var(--stg-rad-1);
+  padding:var(--stg-s1) var(--stg-s2);min-height:var(--stg-s4);
+}
+#dir button:hover{color:var(--stg-bone);border-color:var(--stg-phase)}
+#dir button.on{color:var(--stg-ink);background:var(--stg-phase);border-color:var(--stg-phase)}
+#dir button:focus-visible,#ph-buzz:focus-visible{outline:var(--stg-s1) solid var(--stg-phase);outline-offset:var(--stg-s1)}
+
+/* ====================================================================== */
+/* REDUCED MOTION — the design loses nothing, because its drama was cuts  */
+/* ====================================================================== */
+@media (prefers-reduced-motion:reduce){
+  #ring{animation:none}
+  #timer-arc{transition:none}
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+body.rm #ring{animation:none}
+body.rm #timer-arc{transition:none}
+body.rm *,body.rm *::before,body.rm *::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+</style>
+</head>
+<body>
+
+<main id="stage">
+  <header id="strip">
+    <span class="lozenge" id="act">Act II · Buzzers</span>
+    <span class="spacer"></span>
+    <span id="room-code">room_a1b2c3</span>
+    <span id="clock">41:12</span>
+  </header>
+
+  <div id="ring-wrap">
+    <svg id="ring" viewBox="0 0 1000 1000" aria-hidden="true">
+      <circle id="timer-track" cx="500" cy="500" r="390"></circle>
+      <circle id="timer-arc" cx="500" cy="500" r="390" transform="rotate(-90 500 500)"></circle>
+      <circle id="bloom" cx="500" cy="500" r="330"></circle>
+      <g id="arcs"></g>
+      <g id="notches"></g>
+      <line id="chord" x1="500" y1="500" x2="500" y2="500"></line>
+      <g id="chord-label"></g>
+      <g id="seats"></g>
+      <g id="gains"></g>
+    </svg>
+
+    <div id="plate">
+      <div id="plate-over"></div>
+      <div id="plate-main"></div>
+      <div id="plate-sub"></div>
+    </div>
+
+    <div id="reveal" hidden>
+      <div class="who"></div>
+      <div class="fact"></div>
+    </div>
+
+    <div id="standings" hidden>
+      <div id="st-rows"></div>
+      <div id="st-note">shown at most three times in ninety minutes · never longer than eight seconds</div>
+    </div>
+  </div>
+
+  <footer id="third">
+    <p id="caption">Rawi is warming up.</p>
+    <div id="nameplate"><b>RAWI</b> · your host, unseen</div>
+  </footer>
+</main>
+
+<!-- companion phone: the same ring, one arc of it -->
+<aside id="phone" aria-label="companion phone">
+  <div id="ph-word">your turn to buzz</div>
+  <svg id="ph-arc" viewBox="0 0 200 60" aria-hidden="true">
+    <path id="ph-path" d="" fill="none" stroke-linecap="round"></path>
+    <text id="ph-score" x="100" y="52" text-anchor="middle" font-size="18" font-weight="600"></text>
+  </svg>
+  <button id="ph-buzz" type="button">BUZZ</button>
+  <div id="ph-dot"></div>
+  <div id="ph-label">companion phone</div>
+</aside>
+
+<!-- director: drives the prototype. Not part of the design. -->
+<nav id="dir" aria-label="prototype director">
+  <div class="grp"><span class="cap">seats</span>
+    <button data-seats="2">2</button><button data-seats="4">4</button><button data-seats="6" class="on">6</button>
+  </div>
+  <div class="grp"><span class="cap">beat</span>
+    <button data-go="LOBBY">lobby</button>
+    <button data-go="PROMPT_OPEN">prompt</button>
+    <button data-go="BUZZ_LOCK">buzz lock</button>
+    <button data-go="PHOTO">photo finish</button>
+    <button data-go="ADJUDICATE">adjudicate</button>
+    <button data-go="CELEBRATE">celebrate</button>
+    <button data-go="INTERSTITIAL">interstitial</button>
+  </div>
+  <div class="grp"><span class="cap">moments</span>
+    <button data-fx="laugh">big laugh</button>
+    <button data-fx="reveal">reveal</button>
+    <button data-fx="standings">standings</button>
+  </div>
+  <div class="grp"><span class="cap">view</span>
+    <button data-tog="phone" class="on">phone</button>
+    <button data-tog="rm">reduced motion</button>
+    <button data-tog="auto">autoplay</button>
+    <span class="cap">1/2/3 · space · l r s p m a</span>
+  </div>
+</nav>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------------------------------------------------------- data
+     Mock only. Names and vault facts are the repo's own dry-run roster
+     (content/roster.sample.json); the prompt is a real one from
+     content/packs.json (pr_b_creek_boat). Nothing here talks to a server. */
+  var ROSTER = [
+    { name:"Ana",   score:35, fact:"grew up in Lisbon, two streets from the water" },
+    { name:"Raj",   score:20, fact:"once bowled out a Ranji Trophy player in a gully match" },
+    { name:"Kim",   score:45, fact:"can fold a perfect paper crane in under twenty seconds" },
+    { name:"Omar",  score:25, fact:"his grandmother once argued a market vendor into paying HER" },
+    { name:"Lena",  score:30, fact:"climbed a wall in a wedding dress, on purpose" },
+    { name:"Tomas", score:15, fact:"got lost in Deira for three hours and loved every minute" }
+  ];
+
+  var PROMPT = {
+    title:"One dirham voyage",
+    text:"The wooden boat that still crosses Dubai Creek for a single dirham. Buzz its name.",
+    timer:45
+  };
+
+  var LINES = {
+    LOBBY:        "Welcome in. I'm Rawi. Phones stay in hands, judgement stays at the door.",
+    SEAT:         "{name} is in. The table grows stronger.",
+    PROMPT_OPEN:  "Buzz the second you know it. First name takes the ten.",
+    BUZZ_LOCK:    "{name} is in first. Say it out loud.",
+    PHOTO:        "Nobody move. That was {d} milliseconds apart.",
+    PHOTO_AFTER:  "{name} by {d} milliseconds. {other}, you were robbed by physics.",
+    ADJUDICATE:   "Go on then. Out loud, for the table.",
+    CELEBRATE:    "Abra. Ten points, and a fair bit of smugness, to {name}.",
+    INTERSTITIAL: "Somebody at this table has definitely taken that boat to work.",
+    LAUGH:        "There it is. That's the sound I get paid for.",
+    REVEAL:       "This one belongs to {name}. Now you know something true."
+  };
+
+  /* SVG geometry, in user units. Data, not tokens. */
+  var CX = 500, CY = 500, R_ARC = 330, R_TIMER = 390, R_LABEL = 425, GAP_DEG = 6;
+  var W_MIN = 11, W_MAX = 36;              /* arc thickness at 0 pts / at leader */
+  var TIMER_C = 2 * Math.PI * R_TIMER;
+
+  var PHASES = {
+    LOBBY:        { chroma:"--stg-amber",  act:"Lobby" },
+    A_BASELINE:   { chroma:"--stg-amber",  act:"Act I · Warm-up" },
+    B_REACTION:   { chroma:"--stg-teal",   act:"Act II · Buzzers" },
+    C_DISCOVERY:  { chroma:"--stg-violet", act:"Act III · The Table" },
+    D_IMPROV:     { chroma:"--stg-coral",  act:"Act IV · Improv" },
+    E_LOOP:       { chroma:"--stg-gold",   act:"Act V · The Loop" }
+  };
+
+  /* ---------------------------------------------------------------- state */
+  var S = {
+    seats:6, micro:"LOBBY", phase:"B_REACTION",
+    seated:0, players:[], notches:{},
+    winner:null, runnerUp:null, delta:0, photo:false,
+    timerLeft:PROMPT.timer, timerRunning:false,
+    standingsShown:0, auto:false, autoStep:0, autoTimer:null
+  };
+
+  var $ = function(id){ return document.getElementById(id); };
+  var el = {
+    body:document.body, ring:$("ring"), arcs:$("arcs"), notches:$("notches"),
+    seatsG:$("seats"), gains:$("gains"), chord:$("chord"), chordLabel:$("chord-label"),
+    bloom:$("bloom"), timerArc:$("timer-arc"),
+    plate:$("plate"), pOver:$("plate-over"), pMain:$("plate-main"), pSub:$("plate-sub"),
+    reveal:$("reveal"), standings:$("standings"), stRows:$("st-rows"),
+    act:$("act"), clock:$("clock"), caption:$("caption"),
+    phone:$("phone"), phWord:$("ph-word"), phPath:$("ph-path"), phScore:$("ph-score"),
+    phBuzz:$("ph-buzz"), dir:$("dir")
+  };
+
+  /* ---------------------------------------------------------------- svg helpers */
+  function polar(r, deg){
+    var a = deg * Math.PI / 180;
+    return { x: CX + r * Math.cos(a), y: CY + r * Math.sin(a) };
+  }
+  function arcPath(r, from, to){
+    var a = polar(r, from), b = polar(r, to);
+    var large = (to - from) % 360 > 180 ? 1 : 0;
+    return "M " + a.x + " " + a.y + " A " + r + " " + r + " 0 " + large + " 1 " + b.x + " " + b.y;
+  }
+  function mk(tag, attrs){
+    var n = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for (var k in attrs) if (attrs[k] !== null) n.setAttribute(k, attrs[k]);
+    return n;
+  }
+  /* seat i centre angle. 90deg = bottom = the seat nearest the screen; clockwise. */
+  function seatAngle(i, n){ return 90 + i * (360 / n); }
+  function seatSpan(n){ return 360 / n - GAP_DEG; }
+
+  /* ---------------------------------------------------------------- render */
+  function chroma(){ return getComputedStyle(el.body).getPropertyValue("--stg-phase").trim(); }
+
+  function setPhase(key){
+    S.phase = key;
+    var p = PHASES[key];
+    el.body.style.setProperty("--stg-phase", "var(" + p.chroma + ")");
+    el.act.textContent = p.act;
+  }
+
+  function leader(){
+    var m = 10;
+    for (var i = 0; i < S.players.length; i++) m = Math.max(m, S.players[i].score);
+    return m;
+  }
+  function thickness(score){
+    return W_MIN + (score / leader()) * (W_MAX - W_MIN);
+  }
+
+  function buildPlayers(){
+    S.players = ROSTER.slice(0, S.seats).map(function(p){
+      return { name:p.name, score:p.score, fact:p.fact };
+    });
+    S.notches = {};
+    S.players.forEach(function(p, i){ S.notches[i] = (i % 2 === 0) ? 1 : 0; });
+  }
+
+  function drawRing(){
+    var n = S.seats, span = seatSpan(n), lead = leader();
+    el.arcs.textContent = ""; el.seatsG.textContent = ""; el.notches.textContent = "";
+
+    for (var i = 0; i < n; i++){
+      var c = seatAngle(i, n), from = c - span / 2, to = c + span / 2;
+      var seated = S.micro === "LOBBY" ? i < S.seated : true;
+      var p = S.players[i];
+      var w = seated ? thickness(p.score) : W_MIN;
+
+      var cls = "arc ";
+      if (!seated) cls += "empty";
+      else if (S.winner === i) cls += "won";
+      else if (S.photo && S.runnerUp === i) cls += "live";
+      else cls += "rest";
+
+      var path = mk("path", { d:arcPath(R_ARC, from, to), class:cls, "stroke-width":w });
+      el.arcs.appendChild(path);
+
+      /* reveal scars: permanent notches cut into the arc */
+      if (seated){
+        var count = S.notches[i] || 0;
+        for (var k = 0; k < count; k++){
+          var na = from + span * ((k + 1) / (count + 1));
+          var a1 = polar(R_ARC - w / 2, na), a2 = polar(R_ARC + w / 2, na);
+          el.notches.appendChild(mk("line", {
+            x1:a1.x, y1:a1.y, x2:a2.x, y2:a2.y, class:"notch"
+          }));
+        }
+      }
+
+      /* seat label: horizontal, never rotated */
+      var lp = polar(R_LABEL, c);
+      var cos = Math.cos(c * Math.PI / 180), sin = Math.sin(c * Math.PI / 180);
+      var anchor = cos > 0.3 ? "start" : (cos < -0.3 ? "end" : "middle");
+      var dy = sin > 0.3 ? 40 : (sin < -0.3 ? -14 : 14);
+
+      var t = mk("text", { x:lp.x, y:lp.y + dy, "text-anchor":anchor,
+        class:"seat-name" + (seated && S.winner !== null && S.winner !== i ? " muted" : "") });
+      t.textContent = seated ? p.name : "";
+      el.seatsG.appendChild(t);
+
+      if (seated){
+        var sc = mk("text", { x:lp.x, y:lp.y + dy + 42, "text-anchor":anchor, class:"seat-score" });
+        sc.textContent = p.score;
+        el.seatsG.appendChild(sc);
+      } else {
+        var e = mk("text", { x:lp.x, y:lp.y + dy, "text-anchor":anchor, class:"seat-empty" });
+        e.textContent = "seat " + (i + 1);
+        el.seatsG.appendChild(e);
+      }
+    }
+    drawPhoneArc();
+  }
+
+  /* the phone shows YOUR arc — one piece of the same ring */
+  function drawPhoneArc(){
+    var me = S.players[0];
+    if (!me) return;
+    var w = 4 + (me.score / leader()) * 8;
+    el.phPath.setAttribute("d", "M 20 34 A 90 90 0 0 1 180 34");
+    el.phPath.setAttribute("stroke", chroma());
+    el.phPath.setAttribute("stroke-width", w);
+    el.phScore.setAttribute("fill", chroma());
+    el.phScore.textContent = me.score;
+  }
+
+  function say(key, vars){
+    var s = LINES[key] || "";
+    for (var k in vars) s = s.replace("{" + k + "}", vars[k]);
+    el.caption.textContent = s;
+  }
+
+  function plate(over, main, sub, hero){
+    el.pOver.textContent = over || "";
+    el.pMain.textContent = main || "";
+    el.pSub.textContent = sub || "";
+    el.plate.classList.toggle("hero", !!hero);
+    el.pMain.classList.remove("plate-in");
+    void el.pMain.offsetWidth;
+    el.pMain.classList.add("plate-in");
+  }
+
+  /* ---------------------------------------------------------------- timer */
+  el.timerArc.setAttribute("stroke-dasharray", TIMER_C);
+  el.timerArc.setAttribute("stroke-dashoffset", TIMER_C);
+
+  function paintTimer(){
+    var frac = S.timerLeft / PROMPT.timer;
+    el.timerArc.setAttribute("stroke-dashoffset", TIMER_C * (1 - frac));
+  }
+  setInterval(function(){
+    if (!S.timerRunning) return;
+    S.timerLeft = Math.max(0, S.timerLeft - 1);
+    paintTimer();
+  }, 1000);
+
+  function freezeTimer(v){
+    S.timerRunning = !v;
+    el.timerArc.classList.toggle("frozen", !!v);
+  }
+
+  /* session clock, cosmetic */
+  var sess = 41 * 60 + 12;
+  setInterval(function(){
+    sess++;
+    var m = Math.floor(sess / 60), s = sess % 60;
+    el.clock.textContent = (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+  }, 1000);
+
+  /* ---------------------------------------------------------------- phone luminance
+     Law: as the stage gets brighter, the phone gets darker. */
+  var PHONE = {
+    LOBBY:        { luma:.9, word:"you're in. put it down.", buzz:false, dot:true },
+    PROMPT_OPEN:  { luma:1,  word:"",                        buzz:true,  dot:false },
+    BUZZ_LOCK:    { luma:.5, word:"Kim has it",              buzz:false, dot:false },
+    PHOTO:        { luma:.5, word:"too close to call",       buzz:false, dot:false },
+    ADJUDICATE:   { luma:.4, word:"heads up",                buzz:false, dot:false },
+    CELEBRATE:    { luma:.4, word:"",                        buzz:false, dot:true  },
+    INTERSTITIAL: { luma:.16,word:"",                        buzz:false, dot:true  }
+  };
+  function paintPhone(){
+    var cfg = PHONE[S.micro] || PHONE.INTERSTITIAL;
+    el.body.style.setProperty("--ph-luma", cfg.luma);
+    el.phWord.textContent = cfg.word;
+    el.phBuzz.classList.toggle("dead", !cfg.buzz);
+    el.phBuzz.style.display = cfg.dot && !cfg.buzz ? "none" : "grid";
+    $("ph-dot").style.display = cfg.dot ? "block" : "none";
+    el.phPath.style.display = S.micro === "INTERSTITIAL" ? "none" : "block";
+    el.phScore.style.display = S.micro === "INTERSTITIAL" ? "none" : "block";
+  }
+
+  /* ---------------------------------------------------------------- beats */
+  function clearMoment(){
+    el.chord.classList.remove("on");
+    el.chordLabel.textContent = "";
+    el.gains.textContent = "";
+    el.reveal.hidden = true;
+    el.standings.hidden = true;
+    el.plate.style.opacity = "";
+  }
+
+  var lobbyTimer = null;
+  function go(micro){
+    if (lobbyTimer) { clearInterval(lobbyTimer); lobbyTimer = null; }
+    clearMoment();
+    S.micro = micro;
+
+    if (micro === "LOBBY"){
+      setPhase("LOBBY");
+      S.winner = null; S.runnerUp = null; S.photo = false;
+      S.seated = 0;
+      freezeTimer(true); S.timerLeft = PROMPT.timer; paintTimer();
+      plate("tonight's table", "Six seats. One karak each. No introductions speech.", "", false);
+      say("LOBBY");
+      drawRing(); paintPhone();
+      lobbyTimer = setInterval(function(){
+        if (S.seated >= S.seats){ clearInterval(lobbyTimer); lobbyTimer = null;
+          plate("tonight's table", S.seats === 2 ? "Two of you. This is a duel." :
+            "That's everyone. Nobody performs alone here.", "", false);
+          return; }
+        S.seated++;
+        say("SEAT", { name:S.players[S.seated - 1].name });
+        drawRing();
+      }, 900);
+      return;
+    }
+
+    if (micro === "PROMPT_OPEN"){
+      setPhase("B_REACTION");
+      S.winner = null; S.runnerUp = null; S.photo = false; S.seated = S.seats;
+      S.timerLeft = PROMPT.timer; paintTimer(); freezeTimer(false);
+      plate(PROMPT.title, PROMPT.text, "", false);
+      say("PROMPT_OPEN");
+      drawRing(); paintPhone();
+      return;
+    }
+
+    if (micro === "BUZZ_LOCK"){
+      /* the cut: bed to silence, clock frozen mid-sweep, question becomes a person */
+      setPhase("B_REACTION");
+      S.photo = false; S.winner = 2; S.runnerUp = null; S.seated = S.seats;
+      freezeTimer(true);
+      plate(PROMPT.title + " · locked", S.players[2].name, "Say it out loud.", true);
+      say("BUZZ_LOCK", { name:S.players[2].name });
+      drawRing(); paintPhone();
+      return;
+    }
+
+    if (micro === "PHOTO"){
+      /* photo finish: both ignite, a chord between two real seats, then the hold */
+      setPhase("B_REACTION");
+      S.seated = S.seats;
+      S.photo = true;
+      S.winner = 2;
+      S.runnerUp = S.seats === 2 ? 1 : (S.seats === 4 ? 3 : 5);
+      S.delta = 11;
+      freezeTimer(true);
+      drawRing(); paintPhone();
+
+      var a = polar(R_ARC, seatAngle(S.winner, S.seats));
+      var b = polar(R_ARC, seatAngle(S.runnerUp, S.seats));
+      el.chord.setAttribute("x1", a.x); el.chord.setAttribute("y1", a.y);
+      el.chord.setAttribute("x2", b.x); el.chord.setAttribute("y2", b.y);
+      el.chord.classList.add("on");
+
+      var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      el.chordLabel.textContent = "";
+      var lab = mk("text", { x:mx, y:my - 14, "text-anchor":"middle", class:"delta" });
+      lab.textContent = S.delta + " ms";
+      el.chordLabel.appendChild(lab);
+
+      plate("photo finish", S.players[S.winner].name + " · " + S.players[S.runnerUp].name, "", true);
+      say("PHOTO", { d:S.delta });
+
+      /* the hold. 1200ms of nothing. do not fill it. */
+      setTimeout(function(){
+        if (S.micro !== "PHOTO") return;
+        S.photo = false; drawRing();
+        plate("photo finish · " + S.delta + " ms", S.players[S.winner].name, "Say it out loud.", true);
+        say("PHOTO_AFTER", { name:S.players[S.winner].name, d:S.delta, other:S.players[S.runnerUp].name });
+      }, 1200);
+      return;
+    }
+
+    if (micro === "ADJUDICATE"){
+      setPhase("B_REACTION");
+      S.seated = S.seats;
+      if (S.winner === null) S.winner = 2;
+      freezeTimer(true);
+      plate("", S.players[S.winner].name, "Say it out loud.", true);
+      say("ADJUDICATE");
+      drawRing(); paintPhone();
+      return;
+    }
+
+    if (micro === "CELEBRATE"){
+      setPhase("B_REACTION");
+      S.seated = S.seats;
+      if (S.winner === null) S.winner = 2;
+      freezeTimer(true);
+      S.players[S.winner].score += 10;
+      plate("correct", "Abra", "", true);
+      say("CELEBRATE", { name:S.players[S.winner].name });
+      drawRing(); paintPhone();
+
+      /* +10 rises out of the arc and dissolves. No confetti. No white flash. */
+      var g = polar(R_ARC - 70, seatAngle(S.winner, S.seats));
+      el.gains.textContent = "";
+      var t = mk("text", { x:g.x, y:g.y, "text-anchor":"middle", class:"gain go" });
+      t.textContent = "+10";
+      el.gains.appendChild(t);
+      return;
+    }
+
+    if (micro === "INTERSTITIAL"){
+      /* the state the whole machine is trying to reach */
+      setPhase("B_REACTION");
+      S.seated = S.seats; S.winner = null; S.runnerUp = null; S.photo = false;
+      freezeTimer(true);
+      plate("", "", "", false);
+      say("INTERSTITIAL");
+      drawRing(); paintPhone();
+      return;
+    }
+  }
+
+  /* ---------------------------------------------------------------- moments */
+  var lastBloom = 0;
+  function bigLaugh(){
+    var now = Date.now();
+    if (now - lastBloom < 900) return;   /* queue, never a strobe (WCAG 2.3.1) */
+    lastBloom = now;
+    el.bloom.classList.remove("go");
+    void el.bloom.getBBox();
+    el.bloom.classList.add("go");
+    say("LAUGH");
+  }
+
+  function doReveal(){
+    var i = S.winner !== null ? S.winner : 0;
+    var p = S.players[i];
+    el.reveal.querySelector(".who").textContent = p.name;
+    el.reveal.querySelector(".fact").textContent = p.fact;
+    el.reveal.hidden = false;
+    el.reveal.classList.remove("slide"); void el.reveal.offsetWidth;
+    el.reveal.classList.add("slide");
+    el.plate.style.opacity = "0";
+    say("REVEAL", { name:p.name });
+    /* silence. no sting. then the card retracts and leaves a scar. */
+    setTimeout(function(){
+      el.reveal.hidden = true;
+      el.plate.style.opacity = "";
+      S.notches[i] = (S.notches[i] || 0) + 1;
+      drawRing();
+    }, 3400);
+  }
+
+  function doStandings(){
+    if (S.seats === 2) {           /* with two players a ranked list just says "you're losing" */
+      say("INTERSTITIAL");
+      el.caption.textContent = "Two players. The ring already tells you everything. No list.";
+      return;
+    }
+    var sorted = S.players.slice().sort(function(a,b){ return b.score - a.score; });
+    var max = sorted[0].score;
+    el.stRows.textContent = "";
+    sorted.forEach(function(p){
+      var row = document.createElement("div");
+      row.className = "st-row";
+      var n = document.createElement("div"); n.className = "st-name"; n.textContent = p.name;
+      var wrap = document.createElement("div");
+      var bar = document.createElement("div"); bar.className = "st-bar"; bar.style.width = "0";
+      wrap.appendChild(bar);
+      var num = document.createElement("div"); num.className = "st-num"; num.textContent = p.score;
+      row.appendChild(n); row.appendChild(wrap); row.appendChild(num);
+      el.stRows.appendChild(row);
+      requestAnimationFrame(function(){ bar.style.width = (p.score / max * 100) + "%"; });
+    });
+    el.standings.hidden = false;
+    setTimeout(function(){ el.standings.hidden = true; }, 8000);   /* never longer than eight seconds */
+  }
+
+  /* ---------------------------------------------------------------- controls */
+  function setSeats(n){
+    S.seats = n;
+    buildPlayers();
+    Array.prototype.forEach.call(el.dir.querySelectorAll("[data-seats]"), function(b){
+      b.classList.toggle("on", +b.dataset.seats === n);
+    });
+    go("LOBBY");
+  }
+
+  el.dir.addEventListener("click", function(e){
+    var b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.seats) return setSeats(+b.dataset.seats);
+    if (b.dataset.go)    return go(b.dataset.go);
+    if (b.dataset.fx === "laugh")     return bigLaugh();
+    if (b.dataset.fx === "reveal")    return doReveal();
+    if (b.dataset.fx === "standings") return doStandings();
+    if (b.dataset.tog === "phone"){ el.phone.hidden = !el.phone.hidden; b.classList.toggle("on", !el.phone.hidden); return; }
+    if (b.dataset.tog === "rm"){ el.body.classList.toggle("rm"); b.classList.toggle("on", el.body.classList.contains("rm")); return; }
+    if (b.dataset.tog === "auto"){ toggleAuto(b); return; }
+  });
+
+  var SEQ = ["LOBBY","PROMPT_OPEN","BUZZ_LOCK","ADJUDICATE","CELEBRATE","INTERSTITIAL"];
+  document.addEventListener("keydown", function(e){
+    var k = e.key.toLowerCase();
+    if (k === "1") return setSeats(2);
+    if (k === "2") return setSeats(4);
+    if (k === "3") return setSeats(6);
+    if (k === " "){ e.preventDefault();
+      var i = SEQ.indexOf(S.micro); go(SEQ[(i + 1) % SEQ.length]); return; }
+    if (k === "l") return bigLaugh();
+    if (k === "r") return doReveal();
+    if (k === "s") return doStandings();
+    if (k === "p"){ el.phone.hidden = !el.phone.hidden; return; }
+    if (k === "m"){ el.body.classList.toggle("rm"); return; }
+    if (k === "a"){ toggleAuto(el.dir.querySelector('[data-tog="auto"]')); return; }
+  });
+
+  el.phBuzz.addEventListener("click", function(){
+    if (S.micro !== "PROMPT_OPEN") return;
+    go("PHOTO");
+  });
+
+  /* autoplay: one full round, on a loop, so the file demos itself */
+  var SCRIPT = [
+    ["PROMPT_OPEN", 4200],
+    ["PHOTO",       4200],
+    ["CELEBRATE",   2600],
+    ["_laugh",       900],
+    ["INTERSTITIAL",3400],
+    ["_reveal",     3800],
+    ["_standings",  8400],
+    ["LOBBY",       6200]
+  ];
+  function toggleAuto(btn){
+    S.auto = !S.auto;
+    if (btn) btn.classList.toggle("on", S.auto);
+    if (S.autoTimer){ clearTimeout(S.autoTimer); S.autoTimer = null; }
+    if (S.auto){ S.autoStep = 0; tick(); }
+  }
+  function tick(){
+    if (!S.auto) return;
+    var step = SCRIPT[S.autoStep % SCRIPT.length];
+    S.autoStep++;
+    if (step[0] === "_laugh") bigLaugh();
+    else if (step[0] === "_reveal") doReveal();
+    else if (step[0] === "_standings") doStandings();
+    else go(step[0]);
+    S.autoTimer = setTimeout(tick, step[1]);
+  }
+
+  /* ---------------------------------------------------------------- boot */
+  buildPlayers();
+  setPhase("LOBBY");
+  go("LOBBY");
+})();
+</script>
+</body>
+</html>
