@@ -21,6 +21,7 @@ import os from "node:os";
 import WebSocket from "ws";
 import { RoomActor, type ClientPort } from "../server/actor.js";
 import { ContentStore } from "../server/lines.js";
+import { T0Features, gini } from "../server/features.js";
 import type { ServerMsg } from "../server/contracts.js";
 
 const PORT = 8899;
@@ -347,9 +348,95 @@ async function partB(): Promise<void> {
   await fs.rm(process.env.SILA_DATA!, { recursive: true, force: true });
 }
 
+
+// ------------------------------------------------- Part C: §4.1 anomaly signals
+/**
+ * Module 4 (Social Neocortex) thresholds are only meaningful if the fields they
+ * branch on are actually computed. Before this, dominance_index and
+ * withdrawal_risk were declared in contracts.ts and initialised to 0, and the
+ * v3.2 intervention loop read permanent zeros. These assert the real numbers.
+ */
+async function partC(): Promise<void> {
+  console.log("\nPart C — §4.1 anomaly signals (dominance / withdrawal)");
+
+  // --- dominance: one player takes the room, five barely speak -------------
+  const f = new T0Features();
+  const t0 = 1_000_000;
+  const uids = ["hog", "b", "c", "d", "e", "g"];
+  // hog: 40 interactions; everyone else: 3 each => hog holds 40/55 ~= 0.727
+  for (let i = 0; i < 40; i++) f.record("buzz", "hog", t0 + i * 500);
+  for (const u of uids.slice(1)) for (let i = 0; i < 3; i++) f.record("buzz", u, t0 + i * 500);
+  const now = t0 + 40 * 500;
+  const shares = f.shares(uids, 600, now);
+  const hogShare = shares.get("hog")!;
+  ok(hogShare > 0.6, `dominant player holds majority share (${hogShare.toFixed(3)})`);
+
+  // EWMA needs to converge — Module 4 ticks every 5 s, so tick it.
+  let di = 0;
+  for (let i = 0; i < 20; i++) di = f.dominanceIndex("hog", hogShare, 6);
+  ok(di > 0.65, `dominance_index crosses the §4.1 DOMINANT threshold (${di})`);
+
+  let diQuiet = 0;
+  for (let i = 0; i < 20; i++) diQuiet = f.dominanceIndex("b", shares.get("b")!, 6);
+  ok(diQuiet < 0.65, `a non-dominant player stays below threshold (${diQuiet})`);
+
+  const g = gini(uids.map((u) => shares.get(u)!));
+  ok(g > 0.3, `gini_participation confirms imbalance, gating the ladder (${g})`);
+
+  // --- withdrawal: a player who was active, then goes silent ---------------
+  const w = new T0Features();
+  const s0 = 2_000_000;
+  // "ana" interacts every 10 s for 2 minutes → baseline ≈ 10 s
+  for (let i = 0; i < 12; i++) w.record("buzz", "ana", s0 + i * 10_000);
+  // the others keep going for another 5 minutes; ana never returns
+  for (let i = 0; i < 60; i++) w.record("buzz", "bob", s0 + 120_000 + i * 5_000);
+  const wNow = s0 + 120_000 + 60 * 5_000;
+
+  const baseline = w.silenceBaseline("ana");
+  ok(baseline !== null && baseline >= 9 && baseline <= 11, `silence_baseline learns ana's own rhythm (${baseline}s)`);
+
+  const wShares = w.shares(["ana", "bob"], 600, wNow);
+  let wr = 0;
+  for (let i = 0; i < 20; i++) wr = w.withdrawalRisk("ana", wShares.get("ana")!, 2, wNow);
+  ok(wr > 0.6, `withdrawal_risk crosses the §4.1 QUIET threshold for the drifting player (${wr})`);
+
+  let wrActive = 0;
+  for (let i = 0; i < 20; i++) wrActive = w.withdrawalRisk("bob", wShares.get("bob")!, 2, wNow);
+  ok(wrActive < 0.6, `the still-active player stays below threshold (${wrActive})`);
+
+  // --- a sparse-but-steady player is NOT flagged (individual baseline) -----
+  const q = new T0Features();
+  const q0 = 3_000_000;
+  // "zed" is naturally quiet: one interaction every 90 s, but steady to the end
+  for (let i = 0; i < 8; i++) q.record("buzz", "zed", q0 + i * 90_000);
+  for (let i = 0; i < 40; i++) q.record("buzz", "loud", q0 + i * 18_000);
+  const qNow = q0 + 7 * 90_000 + 1_000; // just after zed's latest
+  const qShares = q.shares(["zed", "loud"], 900, qNow);
+  let wrSparse = 0;
+  for (let i = 0; i < 20; i++) wrSparse = q.withdrawalRisk("zed", qShares.get("zed")!, 2, qNow);
+  ok(wrSparse < 0.6, `a naturally sparse but present player is not flagged (${wrSparse})`);
+
+  // --- EWMA actually smooths (no state snaps) ------------------------------
+  const e = new T0Features();
+  const e0 = 4_000_000;
+  for (let i = 0; i < 30; i++) e.record("buzz", "spike", e0 + i * 100);
+  const eShares = e.shares(["spike", "other"], 600, e0 + 3_000);
+  const first = e.dominanceIndex("spike", eShares.get("spike")!, 6);
+  const second = e.dominanceIndex("spike", eShares.get("spike")!, 6);
+  ok(second >= first, "EWMA converges upward rather than snapping");
+  ok(first < 1 && second <= 1, "dominance_index stays inside 0..1");
+
+  // --- degenerate rooms ----------------------------------------------------
+  const d = new T0Features();
+  ok(d.dominanceIndex("solo", 1, 1) === 0, "a 1-player room has no dominance");
+  ok(d.withdrawalRisk("solo", 1, 1) === 0, "a 1-player room has no withdrawal risk");
+  ok(d.silenceBaseline("nobody") === null, "silence_baseline is null before 3 samples");
+}
+
 async function run(): Promise<void> {
   await partA();
   await partB();
+  await partC();
   console.log(`\n\u2713 all ${passed} assertions passed\n`);
   process.exit(0);
 }

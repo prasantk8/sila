@@ -25,6 +25,9 @@ export class T0Features {
   private wins = new Map<string, number>();
   private opportunities = 0;
   private reactTimestamps: number[] = [];
+  /** EWMA state for the §4.1 anomaly signals (alpha = 0.3, per Module 4). */
+  private ewmaDominance = new Map<string, number>();
+  private ewmaWithdrawal = new Map<string, number>();
 
   record(kind: InteractionSample["kind"], uid: string, t = Date.now()): void {
     this.samples.push({ uid, t, kind });
@@ -97,6 +100,87 @@ export class T0Features {
     return null;
   }
 
+
+  /**
+   * §4.1 silence_baseline — this player's *own* conversational rhythm, in
+   * seconds: the median gap between their consecutive interactions. Module 4
+   * requires quiet-user thresholds be "compared against individual baseline",
+   * so a naturally sparse player is not mistaken for a withdrawing one.
+   * Null until we have 3 samples (2 gaps); callers must treat null as
+   * "no baseline yet", not as zero.
+   */
+  silenceBaseline(uid: string): number | null {
+    const ts = this.samples.filter((s) => s.uid === uid).map((s) => s.t);
+    if (ts.length < 3) return null;
+    const gaps: number[] = [];
+    for (let i = 1; i < ts.length; i++) gaps.push((ts[i] - ts[i - 1]) / 1000);
+    gaps.sort((a, b) => a - b);
+    return round3(gaps[Math.floor(gaps.length / 2)]);
+  }
+
+  /**
+   * §4.1 dominance_index (DI) — airtime capture relative to an equal split.
+   *
+   * The spec fixes the threshold (DI > 0.65, gated on gini > 0.30) but not the
+   * formula, so this is our definition and the reason for it:
+   *   shareTerm = clamp01((share / fairShare - 1) / 2)
+   *     -> a player at their fair share scores 0; at 3x fair share, 1.0.
+   *   DI = 0.7 * shareTerm + 0.3 * initiative
+   * Airtime dominates the blend because "taking the room" is what the
+   * DOMINANT_LADDER responds to; initiative (attempts / opportunities) is
+   * folded in at 0.3 because reflexive buzzing crowds others out even when the
+   * raw interaction count looks fair. In a 6-seat room this crosses 0.65 at
+   * roughly 38% of all interactions - one player doing the work of 2.3.
+   */
+  dominanceIndex(uid: string, share: number, n: number): number {
+    if (n <= 1) return 0;
+    const fair = 1 / n;
+    const shareTerm = clamp01((share / fair - 1) / 2);
+    const raw = 0.7 * shareTerm + 0.3 * this.initiative(uid);
+    return this.smooth(this.ewmaDominance, uid, raw);
+  }
+
+  /**
+   * §4.1 withdrawal_risk — the quiet one, measured against their own baseline.
+   *
+   *   silenceTerm = clamp01(secondsSinceLast / max(3 * baseline, 60))
+   *     -> silent for 3x your own normal gap (floor 60s) reads as 1.0.
+   *   shareTerm   = clamp01((fairShare - share) / fairShare)
+   *   WR = 0.6 * silenceTerm + 0.4 * shareTerm
+   *
+   * Silence outweighs share because a player can hold a fair share early and
+   * still be drifting out now, and drift is what the QUIET_LADDER must catch
+   * before it hardens.
+   *
+   * Known limitation: a player who has never interacted at all has no
+   * secondsSinceLast, so they score 0.4 here - below the 0.60 threshold. That
+   * is deliberate: Module 4 catches them with its separate
+   * `seconds_since_last_interaction > 240` clause, which needs a seat-time
+   * seed on Participant.last_interaction_ts to fire. See M0 exit notes.
+   */
+  withdrawalRisk(uid: string, share: number, n: number, now = Date.now()): number {
+    if (n <= 1) return 0;
+    const anyActivity = this.samples.some((s) => s.uid === uid) || this.samples.length > 0;
+    if (!anyActivity) return 0;
+    const fair = 1 / n;
+    const shareTerm = clamp01((fair - share) / fair);
+    const since = this.secondsSinceLast(uid, now);
+    const baseline = this.silenceBaseline(uid);
+    const tolerance = Math.max(3 * (baseline ?? 20), 60);
+    const silenceTerm = since === null ? 0 : clamp01(since / tolerance);
+    const raw = 0.6 * silenceTerm + 0.4 * shareTerm;
+    return this.smooth(this.ewmaWithdrawal, uid, raw);
+  }
+
+  /** Module 4 T0 pipeline: EWMA, alpha = 0.3, so directives do not snap. */
+  private smooth(store: Map<string, number>, uid: string, raw: number): number {
+    const alpha = 0.3;
+    const prev = store.get(uid);
+    const next = prev === undefined ? raw : alpha * raw + (1 - alpha) * prev;
+    store.set(uid, next);
+    return round3(next);
+  }
+
   /** Refresh the `live` block on every participant + room gini/energy. */
   applyTo(state: RoomState, windowS: number, now = Date.now()): void {
     const active = state.participants.filter((p) => p.conn !== "LEFT");
@@ -107,6 +191,9 @@ export class T0Features {
       p.live.initiative = round3(this.initiative(p.uid));
       p.live.success_rate = round3(this.successRate(p.uid));
       p.live.median_buzz_ms = this.medianBuzzMs(p.uid);
+      p.live.silence_baseline = this.silenceBaseline(p.uid);
+      p.live.dominance_index = this.dominanceIndex(p.uid, p.live.participation_share, active.length);
+      p.live.withdrawal_risk = this.withdrawalRisk(p.uid, p.live.participation_share, active.length, now);
     }
     state.room_metrics.gini_participation = round3(gini(active.map((p) => p.live.participation_share)));
     // energy: z-blend proxy — interaction density over the last 60 s, squashed
@@ -127,6 +214,10 @@ export function gini(values: number[]): number {
   let cum = 0;
   for (let i = 0; i < n; i++) cum += (i + 1) * sorted[i];
   return round3((2 * cum) / (n * sum) - (n + 1) / n);
+}
+
+function clamp01(x: number): number {
+  return x < 0 ? 0 : x > 1 ? 1 : x;
 }
 
 function round3(x: number): number {
